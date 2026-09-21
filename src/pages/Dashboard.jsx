@@ -75,7 +75,7 @@ export default function Dashboard() {
               <div className="spacer" />
               <div className="row gap-8 wrap">
                 {kycEnAttente > 0 && (
-                  <Link className="btn btn-warning btn-sm" to="/utilisateurs?statutKyc=en_attente">
+                  <Link className="btn btn-warning btn-sm" to="/clients?statutKyc=en_attente">
                     Voir les clients
                   </Link>
                 )}

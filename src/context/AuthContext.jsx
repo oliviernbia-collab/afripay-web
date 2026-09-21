@@ -56,9 +56,16 @@ export function AuthProvider({ children }) {
     return data.admin;
   }, []);
 
+  // Permet à la page Profil de mettre à jour la topbar/sidebar immédiatement après
+  // un changement de nom/email, sans attendre une prochaine connexion.
+  const updateAdmin = useCallback((next) => {
+    setAdmin(next);
+    localStorage.setItem('admin', JSON.stringify(next));
+  }, []);
+
   const value = useMemo(
-    () => ({ admin, isAuthenticated: !!admin, ready, login, logout }),
-    [admin, ready, login, logout],
+    () => ({ admin, isAuthenticated: !!admin, ready, login, logout, updateAdmin }),
+    [admin, ready, login, logout, updateAdmin],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

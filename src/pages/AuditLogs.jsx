@@ -1,29 +1,36 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import Banner from '../components/Banner';
-import StatusBadge, { methodLabel, typeLabel } from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
-import { formatDate, formatFcfa } from '../utils/format';
+import { formatDate } from '../utils/format';
 
-const TYPES = [
-  { value: '', label: 'Tous les types' },
-  { value: 'achat', label: 'Achat' },
-  { value: 'recharge', label: 'Recharge' },
-  { value: 'transfert', label: 'Transfert' },
-];
+const ACTION_LABELS = {
+  'kyc.decision': 'Décision KYC',
+  'kyb.decision': 'Décision KYB',
+  'notification.envoi': 'Envoi de notification',
+  'admin.creation': "Création d'un compte interne",
+  'admin.maj': "Modification d'un compte interne",
+};
 
-const STATUSES = [
-  { value: '', label: 'Tous les statuts' },
-  { value: 'réussi', label: 'Réussi' },
-  { value: 'en_attente', label: 'En attente' },
-  { value: 'échoué', label: 'Échoué' },
-];
+const ACTIONS = ['', ...Object.keys(ACTION_LABELS)];
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 40;
 
-export default function Transactions() {
-  const [type, setType] = useState('');
-  const [statut, setStatut] = useState('');
+function formatDetails(raw) {
+  if (!raw) return '—';
+  try {
+    const obj = JSON.parse(raw);
+    return Object.entries(obj)
+      .filter(([, v]) => v !== null && v !== undefined && v !== '')
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(' · ');
+  } catch {
+    return raw;
+  }
+}
+
+export default function AuditLogs() {
+  const [action, setAction] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [list, setList] = useState([]);
@@ -34,13 +41,10 @@ export default function Transactions() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   function buildQuery(currentOffset) {
-    const params = new URLSearchParams();
-    if (type) params.set('type', type);
-    if (statut) params.set('statut', statut);
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(currentOffset) });
+    if (action) params.set('action', action);
     if (dateDebut) params.set('dateDebut', dateDebut);
     if (dateFin) params.set('dateFin', dateFin);
-    params.set('limit', String(PAGE_SIZE));
-    params.set('offset', String(currentOffset));
     return params.toString();
   }
 
@@ -49,7 +53,7 @@ export default function Transactions() {
     setLoading(true);
     setError('');
     api
-      .get(`/admin/transactions?${buildQuery(0)}`)
+      .get(`/admin/audit-logs?${buildQuery(0)}`)
       .then((data) => {
         if (cancelled) return;
         setList(data);
@@ -66,13 +70,13 @@ export default function Transactions() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, statut, dateDebut, dateFin]);
+  }, [action, dateDebut, dateFin]);
 
   async function loadMore() {
     setLoadingMore(true);
     setError('');
     try {
-      const data = await api.get(`/admin/transactions?${buildQuery(offset)}`);
+      const data = await api.get(`/admin/audit-logs?${buildQuery(offset)}`);
       setList((prev) => [...prev, ...data]);
       setOffset((prev) => prev + data.length);
       setHasMore(data.length === PAGE_SIZE);
@@ -87,24 +91,21 @@ export default function Transactions() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Transactions</h1>
-          <p>Historique des achats, recharges et transferts sur la plateforme.</p>
+          <h1>Audit Logs</h1>
+          <p>Journal des actions sensibles effectuées depuis le back-office AfriPay.</p>
         </div>
       </div>
 
       <Banner type="error" message={error} onClose={() => setError('')} />
 
       <div className="filters-bar">
-        <select className="input" style={{ maxWidth: 220 }} value={type} onChange={(e) => setType(e.target.value)}>
-          {TYPES.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+        <div className="tabs">
+          {ACTIONS.map((a) => (
+            <button key={a} type="button" className={`tab${action === a ? ' active' : ''}`} onClick={() => setAction(a)}>
+              {a ? ACTION_LABELS[a] : 'Toutes les actions'}
+            </button>
           ))}
-        </select>
-        <select className="input" style={{ maxWidth: 220 }} value={statut} onChange={(e) => setStatut(e.target.value)}>
-          {STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
+        </div>
         <DateRangeFilter
           dateDebut={dateDebut}
           dateFin={dateFin}
@@ -119,9 +120,7 @@ export default function Transactions() {
         </div>
       )}
 
-      {!loading && list.length === 0 && !error && (
-        <div className="empty-state">Aucune transaction ne correspond à ces critères.</div>
-      )}
+      {!loading && list.length === 0 && !error && <div className="empty-state">Aucune entrée dans le journal.</div>}
 
       {!loading && list.length > 0 && (
         <>
@@ -129,28 +128,21 @@ export default function Transactions() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Référence</th>
-                  <th>Type</th>
-                  <th>Montant</th>
-                  <th>Méthode</th>
-                  <th>Statut</th>
+                  <th>Action</th>
+                  <th>Effectuée par</th>
+                  <th>Cible</th>
+                  <th>Détails</th>
                   <th>Date</th>
                 </tr>
               </thead>
               <tbody>
-                {list.map((tx) => (
-                  <tr key={tx.id}>
-                    <td>
-                      <div className="stack" style={{ gap: 2 }}>
-                        <span>{tx.reference || tx.id.slice(0, 8)}</span>
-                        {tx.libelle && <span className="text-muted" style={{ fontSize: '0.76rem' }}>{tx.libelle}</span>}
-                      </div>
-                    </td>
-                    <td>{typeLabel(tx.type)}</td>
-                    <td>{formatFcfa(tx.montant)}</td>
-                    <td className="text-secondary">{methodLabel(tx.méthode)}</td>
-                    <td><StatusBadge status={tx.statut} /></td>
-                    <td className="text-secondary">{formatDate(tx.date_heure)}</td>
+                {list.map((log) => (
+                  <tr key={log.id}>
+                    <td><span className="badge badge-violet">{ACTION_LABELS[log.action] || log.action}</span></td>
+                    <td>{log.admin_nom || <span className="text-muted">—</span>}</td>
+                    <td className="text-secondary">{log.cible_type ? `${log.cible_type} · ${log.cible_id?.slice(0, 8)}…` : '—'}</td>
+                    <td className="text-secondary" style={{ maxWidth: 320 }}>{formatDetails(log.détails)}</td>
+                    <td className="text-secondary">{formatDate(log.date_heure)}</td>
                   </tr>
                 ))}
               </tbody>

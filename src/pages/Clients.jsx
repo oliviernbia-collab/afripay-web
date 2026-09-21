@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
+import DateRangeFilter from '../components/DateRangeFilter';
 import { formatDate } from '../utils/format';
 
 const TABS = [
@@ -16,6 +17,8 @@ const TABS = [
 export default function Utilisateurs() {
   const [searchParams, setSearchParams] = useSearchParams();
   const statutKyc = searchParams.get('statutKyc') || '';
+  const dateDebut = searchParams.get('dateDebut') || '';
+  const dateFin = searchParams.get('dateFin') || '';
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
   const [list, setList] = useState([]);
   const [error, setError] = useState('');
@@ -44,6 +47,8 @@ export default function Utilisateurs() {
     const params = new URLSearchParams();
     if (statutKyc) params.set('statutKyc', statutKyc);
     if (search) params.set('search', search);
+    if (dateDebut) params.set('dateDebut', dateDebut);
+    if (dateFin) params.set('dateFin', dateFin);
     api
       .get(`/admin/utilisateurs?${params.toString()}`)
       .then((data) => {
@@ -58,7 +63,7 @@ export default function Utilisateurs() {
     return () => {
       cancelled = true;
     };
-  }, [statutKyc, search]);
+  }, [statutKyc, search, dateDebut, dateFin]);
 
   function setTab(value) {
     setSearchParams((prev) => {
@@ -69,12 +74,42 @@ export default function Utilisateurs() {
     });
   }
 
+  // Chaque champ met à jour uniquement sa propre clé d'URL, via la forme fonctionnelle
+  // de setSearchParams (toujours basée sur le `prev` le plus récent) — deux changements
+  // rapprochés (Du puis Au) ne peuvent donc jamais s'écraser l'un l'autre.
+  function setDateDebut(value) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set('dateDebut', value);
+      else next.delete('dateDebut');
+      return next;
+    });
+  }
+
+  function setDateFin(value) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set('dateFin', value);
+      else next.delete('dateFin');
+      return next;
+    });
+  }
+
+  function clearDateRange() {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('dateDebut');
+      next.delete('dateFin');
+      return next;
+    });
+  }
+
   return (
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Utilisateurs (clients)</h1>
-          <p>Consultez et validez les dossiers KYC des clients AfriPay.</p>
+          <h1>Clients</h1>
+          <p>Consultez les comptes Client AfriPay et leur statut KYC.</p>
         </div>
       </div>
 
@@ -100,6 +135,13 @@ export default function Utilisateurs() {
             </button>
           ))}
         </div>
+        <DateRangeFilter
+          dateDebut={dateDebut}
+          dateFin={dateFin}
+          onDateDebutChange={setDateDebut}
+          onDateFinChange={setDateFin}
+          onClear={clearDateRange}
+        />
       </div>
 
       {loading && (
@@ -126,7 +168,7 @@ export default function Utilisateurs() {
             </thead>
             <tbody>
               {list.map((u) => (
-                <tr key={u.id} className="clickable" onClick={() => navigate(`/utilisateurs/${u.id}`)}>
+                <tr key={u.id} className="clickable" onClick={() => navigate(`/clients/${u.id}`)}>
                   <td>{u.prenom} {u.nom}</td>
                   <td>{u.telephone}</td>
                   <td>{u.email || <span className="text-muted">—</span>}</td>

@@ -72,8 +72,8 @@ export default function UtilisateurDetail() {
     <div className="page">
       <div className="page-header">
         <div>
-          <Link to="/utilisateurs" className="back-link text-secondary" style={{ fontSize: '0.82rem' }}>
-            <Icon icon={faArrowLeft} /> Retour aux utilisateurs
+          <Link to="/clients" className="back-link text-secondary" style={{ fontSize: '0.82rem' }}>
+            <Icon icon={faArrowLeft} /> Retour aux clients
           </Link>
           <h1 style={{ marginTop: 8 }}>
             {user ? `${user.prenom} ${user.nom}` : 'Détail utilisateur'}

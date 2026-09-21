@@ -53,10 +53,31 @@ npm run preview # pour prévisualiser le build localement
 src/
   api/client.js        Client HTTP (fetch) : base URL, token, enveloppe {success,data}
   context/AuthContext.jsx  Session admin (login/logout, vérification du token au chargement)
-  components/           Layout (sidebar/topbar), badges de statut, cartes stat, bannières, Icon (Font Awesome)
-  pages/                Login, Dashboard, Utilisateurs (+détail), Marchands (+détail), Transactions
+  components/           Layout (sidebar fixe/responsive + topbar), badges de statut, cartes stat, bannières, filtre par plage de dates, Icon (Font Awesome)
+  pages/                Login, Dashboard, Clients (+détail), Marchands (+détail), KYC, KYB, Transactions,
+                        Wallets, Recharges, Biométrie, Fraude, Notifications, Internes, AuditLogs
   utils/format.js       Formatage FCFA / dates / pourcentages
 ```
+
+## Filtre par date
+
+Toutes les listes principales (Clients, Marchands, KYC, KYB, Transactions, Wallets, Recharges,
+Biométrie, Notifications, Audit Logs) disposent d'un filtre "Du / Au" (`src/components/DateRangeFilter.jsx`),
+en plus de leurs filtres existants (statut, type, recherche). Un bouton "Effacer" apparaît dès qu'une
+borne est renseignée.
+
+## Sections du back-office
+
+La sidebar reflète l'organisation complète de l'admin AfriPay : Dashboard, Clients, Marchands, KYC, KYB,
+Transactions, Wallets, Recharges, Biométrie, Fraude, Notifications, Utilisateurs internes, Audit Logs.
+
+**Contrôle d'accès par rôle** (le rôle vient du compte admin, voir `backend/src/middleware/auth.js` `requireRole`) :
+- **Fraude** et **Audit Logs** : visibles par `super_admin` et `conformite` uniquement.
+- **Utilisateurs internes** (gestion des comptes admin) : visible par `super_admin` uniquement.
+- Tout le reste : visible par tout compte admin actif.
+
+La sidebar masque automatiquement les entrées non autorisées (`Layout.jsx` filtre `NAV_ITEMS` sur `admin.role`) ;
+le backend applique la même règle côté API, donc un accès direct par URL à une section non autorisée échoue avec `403`.
 
 ## Icônes
 
@@ -76,11 +97,38 @@ AfriPay (web / mobileclient / mobilepro).
 - **Dashboard** : indicateurs clés (utilisateurs, marchands, volumes,
   dossiers en attente) avec bandeau d'alerte cliquable vers les listes
   filtrées "en attente".
-- **Utilisateurs / Marchands** : recherche, filtre par statut
+- **Clients / Marchands** : recherche, filtre par statut
   KYC/KYB, fiche détail avec documents soumis (images), actions
   Valider / Rejeter / Suspendre (motif obligatoire pour rejet et
   suspension).
+- **KYC / KYB** : files d'attente documentaires transverses (tous
+  dossiers, tous statuts), qui renvoient vers la fiche Client/Marchand
+  pour la décision.
 - **Transactions** : filtres type/statut, pagination "Charger plus".
+- **Wallets** : soldes consolidés (totaux Clients/Marchands), recherche,
+  filtre par type de portefeuille.
+- **Recharges** : journal des recharges par fournisseur (Wave, Orange
+  Money, Moov Money, MTN Money, Djamo, Visa) et statut.
+- **Biométrie** : indicateurs d'enrôlement/tentatives, derniers
+  enrôlements actifs, journal des tentatives de reconnaissance.
+- **Fraude** : échecs biométriques récents, IP avec échecs répétés,
+  transactions échouées, comptes suspendus avec réactivation en un
+  clic.
+- **Notifications** : historique des notifications envoyées + formulaire
+  d'envoi manuel à un client/marchand par numéro de téléphone.
+- **Utilisateurs internes** : création de comptes admin, changement de
+  rôle, activation/désactivation (impossible de retirer le dernier
+  `super_admin` actif).
+- **Audit Logs** : journal des actions sensibles effectuées depuis le
+  back-office (décisions KYC/KYB, envoi de notification, gestion des
+  comptes internes).
+- **Mon profil** (accessible en cliquant sur son nom/avatar dans la
+  topbar) : photo de profil (upload/remplacement/suppression, JPEG/PNG/WebP
+  4 Mo max, via le petit bouton caméra sur l'avatar — affichée aussi dans
+  la topbar), modification du nom/email, changement de mot de passe
+  (avec vérification du mot de passe actuel), et fil d'activité
+  personnel (ses propres entrées du journal d'audit, visible quel
+  que soit son rôle).
 
 ## Limitations connues / choix pris
 

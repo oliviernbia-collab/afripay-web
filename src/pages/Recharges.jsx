@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import Banner from '../components/Banner';
-import StatusBadge, { methodLabel, typeLabel } from '../components/StatusBadge';
+import StatusBadge from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
 import { formatDate, formatFcfa } from '../utils/format';
 
-const TYPES = [
-  { value: '', label: 'Tous les types' },
-  { value: 'achat', label: 'Achat' },
-  { value: 'recharge', label: 'Recharge' },
-  { value: 'transfert', label: 'Transfert' },
+const PROVIDERS = [
+  { value: '', label: 'Tous les fournisseurs' },
+  { value: 'wave', label: 'Wave' },
+  { value: 'orange_money', label: 'Orange Money' },
+  { value: 'moov_money', label: 'Moov Money' },
+  { value: 'mtn_money', label: 'MTN Mobile Money' },
+  { value: 'djamo', label: 'Djamo' },
+  { value: 'visa', label: 'Carte Visa' },
 ];
 
 const STATUSES = [
@@ -21,8 +24,8 @@ const STATUSES = [
 
 const PAGE_SIZE = 25;
 
-export default function Transactions() {
-  const [type, setType] = useState('');
+export default function Recharges() {
+  const [fournisseur, setFournisseur] = useState('');
   const [statut, setStatut] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
@@ -35,7 +38,7 @@ export default function Transactions() {
 
   function buildQuery(currentOffset) {
     const params = new URLSearchParams();
-    if (type) params.set('type', type);
+    if (fournisseur) params.set('fournisseur', fournisseur);
     if (statut) params.set('statut', statut);
     if (dateDebut) params.set('dateDebut', dateDebut);
     if (dateFin) params.set('dateFin', dateFin);
@@ -49,7 +52,7 @@ export default function Transactions() {
     setLoading(true);
     setError('');
     api
-      .get(`/admin/transactions?${buildQuery(0)}`)
+      .get(`/admin/recharges?${buildQuery(0)}`)
       .then((data) => {
         if (cancelled) return;
         setList(data);
@@ -66,13 +69,13 @@ export default function Transactions() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, statut, dateDebut, dateFin]);
+  }, [fournisseur, statut, dateDebut, dateFin]);
 
   async function loadMore() {
     setLoadingMore(true);
     setError('');
     try {
-      const data = await api.get(`/admin/transactions?${buildQuery(offset)}`);
+      const data = await api.get(`/admin/recharges?${buildQuery(offset)}`);
       setList((prev) => [...prev, ...data]);
       setOffset((prev) => prev + data.length);
       setHasMore(data.length === PAGE_SIZE);
@@ -87,17 +90,17 @@ export default function Transactions() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Transactions</h1>
-          <p>Historique des achats, recharges et transferts sur la plateforme.</p>
+          <h1>Recharges</h1>
+          <p>Journal des recharges de portefeuille via Mobile Money et carte Visa.</p>
         </div>
       </div>
 
       <Banner type="error" message={error} onClose={() => setError('')} />
 
       <div className="filters-bar">
-        <select className="input" style={{ maxWidth: 220 }} value={type} onChange={(e) => setType(e.target.value)}>
-          {TYPES.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+        <select className="input" style={{ maxWidth: 220 }} value={fournisseur} onChange={(e) => setFournisseur(e.target.value)}>
+          {PROVIDERS.map((p) => (
+            <option key={p.value} value={p.value}>{p.label}</option>
           ))}
         </select>
         <select className="input" style={{ maxWidth: 220 }} value={statut} onChange={(e) => setStatut(e.target.value)}>
@@ -120,7 +123,7 @@ export default function Transactions() {
       )}
 
       {!loading && list.length === 0 && !error && (
-        <div className="empty-state">Aucune transaction ne correspond à ces critères.</div>
+        <div className="empty-state">Aucune recharge ne correspond à ces critères.</div>
       )}
 
       {!loading && list.length > 0 && (
@@ -129,28 +132,23 @@ export default function Transactions() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Référence</th>
-                  <th>Type</th>
+                  <th>Client</th>
+                  <th>Fournisseur</th>
+                  <th>Référence externe</th>
                   <th>Montant</th>
-                  <th>Méthode</th>
                   <th>Statut</th>
                   <th>Date</th>
                 </tr>
               </thead>
               <tbody>
-                {list.map((tx) => (
-                  <tr key={tx.id}>
-                    <td>
-                      <div className="stack" style={{ gap: 2 }}>
-                        <span>{tx.reference || tx.id.slice(0, 8)}</span>
-                        {tx.libelle && <span className="text-muted" style={{ fontSize: '0.76rem' }}>{tx.libelle}</span>}
-                      </div>
-                    </td>
-                    <td>{typeLabel(tx.type)}</td>
-                    <td>{formatFcfa(tx.montant)}</td>
-                    <td className="text-secondary">{methodLabel(tx.méthode)}</td>
-                    <td><StatusBadge status={tx.statut} /></td>
-                    <td className="text-secondary">{formatDate(tx.date_heure)}</td>
+                {list.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.prenom} {r.nom}<div className="text-muted" style={{ fontSize: '0.76rem' }}>{r.telephone}</div></td>
+                    <td>{PROVIDERS.find((p) => p.value === r.fournisseur)?.label || r.fournisseur}</td>
+                    <td className="text-secondary">{r.référence_externe}</td>
+                    <td style={{ fontWeight: 600 }}>{formatFcfa(r.montant)}</td>
+                    <td><StatusBadge status={r.statut} /></td>
+                    <td className="text-secondary">{formatDate(r.date_creation)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
+import DateRangeFilter from '../components/DateRangeFilter';
 import { formatDate } from '../utils/format';
 
 const TABS = [
@@ -16,6 +17,8 @@ const TABS = [
 export default function Marchands() {
   const [searchParams, setSearchParams] = useSearchParams();
   const statutKyb = searchParams.get('statutKyb') || '';
+  const dateDebut = searchParams.get('dateDebut') || '';
+  const dateFin = searchParams.get('dateFin') || '';
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
   const [list, setList] = useState([]);
   const [error, setError] = useState('');
@@ -43,6 +46,8 @@ export default function Marchands() {
     const params = new URLSearchParams();
     if (statutKyb) params.set('statutKyb', statutKyb);
     if (search) params.set('search', search);
+    if (dateDebut) params.set('dateDebut', dateDebut);
+    if (dateFin) params.set('dateFin', dateFin);
     api
       .get(`/admin/marchands?${params.toString()}`)
       .then((data) => {
@@ -57,13 +62,43 @@ export default function Marchands() {
     return () => {
       cancelled = true;
     };
-  }, [statutKyb, search]);
+  }, [statutKyb, search, dateDebut, dateFin]);
 
   function setTab(value) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (value) next.set('statutKyb', value);
       else next.delete('statutKyb');
+      return next;
+    });
+  }
+
+  // Chaque champ met à jour uniquement sa propre clé d'URL, via la forme fonctionnelle
+  // de setSearchParams (toujours basée sur le `prev` le plus récent) — deux changements
+  // rapprochés (Du puis Au) ne peuvent donc jamais s'écraser l'un l'autre.
+  function setDateDebut(value) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set('dateDebut', value);
+      else next.delete('dateDebut');
+      return next;
+    });
+  }
+
+  function setDateFin(value) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set('dateFin', value);
+      else next.delete('dateFin');
+      return next;
+    });
+  }
+
+  function clearDateRange() {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('dateDebut');
+      next.delete('dateFin');
       return next;
     });
   }
@@ -99,6 +134,13 @@ export default function Marchands() {
             </button>
           ))}
         </div>
+        <DateRangeFilter
+          dateDebut={dateDebut}
+          dateFin={dateFin}
+          onDateDebutChange={setDateDebut}
+          onDateFinChange={setDateFin}
+          onClear={clearDateRange}
+        />
       </div>
 
       {loading && (

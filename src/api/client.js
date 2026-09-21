@@ -68,6 +68,8 @@ export const api = {
   get: (path) => request(path),
   post: (path, body, opts = {}) => request(path, { method: 'POST', body, ...opts }),
   put: (path, body, opts = {}) => request(path, { method: 'PUT', body, ...opts }),
+  patch: (path, body, opts = {}) => request(path, { method: 'PATCH', body, ...opts }),
+  del: (path, opts = {}) => request(path, { method: 'DELETE', ...opts }),
 };
 
 // Construit l'URL absolue d'un fichier renvoyé par l'API (ex: /uploads/xxx.jpg)
