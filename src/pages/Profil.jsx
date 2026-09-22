@@ -4,6 +4,7 @@ import { api, fileUrl } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Banner from '../components/Banner';
 import Icon from '../components/Icon';
+import PasswordInput from '../components/PasswordInput';
 import { formatDate } from '../utils/format';
 
 const MAX_PHOTO_SIZE = 4 * 1024 * 1024;
@@ -118,9 +119,8 @@ function PasswordForm() {
       <form onSubmit={handleSubmit} className="stack gap-12">
         <div className="field">
           <label>Mot de passe actuel</label>
-          <input
-            className="input"
-            type="password"
+          <PasswordInput
+            autoComplete="current-password"
             value={motDePasseActuel}
             onChange={(e) => setMotDePasseActuel(e.target.value)}
             required
@@ -129,9 +129,8 @@ function PasswordForm() {
         <div className="row gap-12 wrap">
           <div className="field" style={{ flex: 1, minWidth: 180 }}>
             <label>Nouveau mot de passe</label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
+              autoComplete="new-password"
               value={nouveauMotDePasse}
               onChange={(e) => setNouveauMotDePasse(e.target.value)}
               required
@@ -140,9 +139,8 @@ function PasswordForm() {
           </div>
           <div className="field" style={{ flex: 1, minWidth: 180 }}>
             <label>Confirmer le nouveau mot de passe</label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
+              autoComplete="new-password"
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
               required

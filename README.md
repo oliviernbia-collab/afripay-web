@@ -139,6 +139,6 @@ AfriPay (web / mobileclient / mobilepro).
 - Les actions "Rejeter" / "Suspendre" utilisent `window.prompt()` pour
   saisir le motif (au lieu d'une modale dédiée) afin de rester simple ;
   fonctionnellement équivalent, esthétiquement plus sommaire.
-- Le logo officiel (`assets/Logo-AfriPay.png`) a été redimensionné/compressé
+- Le logo officiel (`assets/logo.png`) a été redimensionné/compressé
   (400×400 pour l'UI, 64×64 pour le favicon) pour éviter d'expédier un
   PNG de ~800 Ko à chaque chargement.

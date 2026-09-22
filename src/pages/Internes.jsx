@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import Banner from '../components/Banner';
+import PasswordInput from '../components/PasswordInput';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/format';
 
@@ -55,7 +56,13 @@ function CreateForm({ onCreated }) {
         </div>
         <div className="field" style={{ flex: 1, minWidth: 160 }}>
           <label>Mot de passe provisoire</label>
-          <input className="input" value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} required minLength={6} />
+          <PasswordInput
+            autoComplete="new-password"
+            value={motDePasse}
+            onChange={(e) => setMotDePasse(e.target.value)}
+            required
+            minLength={6}
+          />
         </div>
         <div className="field" style={{ minWidth: 180 }}>
           <label>Rôle</label>

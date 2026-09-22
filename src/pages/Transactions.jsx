@@ -19,11 +19,18 @@ const STATUSES = [
   { value: 'échoué', label: 'Échoué' },
 ];
 
+const ACCOUNT_TYPES = [
+  { value: '', label: 'Tous les comptes' },
+  { value: 'client', label: 'Clients' },
+  { value: 'marchand', label: 'Marchands' },
+];
+
 const PAGE_SIZE = 25;
 
 export default function Transactions() {
   const [type, setType] = useState('');
   const [statut, setStatut] = useState('');
+  const [typeCompte, setTypeCompte] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [list, setList] = useState([]);
@@ -37,6 +44,7 @@ export default function Transactions() {
     const params = new URLSearchParams();
     if (type) params.set('type', type);
     if (statut) params.set('statut', statut);
+    if (typeCompte) params.set('typeCompte', typeCompte);
     if (dateDebut) params.set('dateDebut', dateDebut);
     if (dateFin) params.set('dateFin', dateFin);
     params.set('limit', String(PAGE_SIZE));
@@ -66,7 +74,7 @@ export default function Transactions() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, statut, dateDebut, dateFin]);
+  }, [type, statut, typeCompte, dateDebut, dateFin]);
 
   async function loadMore() {
     setLoadingMore(true);
@@ -103,6 +111,11 @@ export default function Transactions() {
         <select className="input" style={{ maxWidth: 220 }} value={statut} onChange={(e) => setStatut(e.target.value)}>
           {STATUSES.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        <select className="input" style={{ maxWidth: 220 }} value={typeCompte} onChange={(e) => setTypeCompte(e.target.value)}>
+          {ACCOUNT_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
           ))}
         </select>
         <DateRangeFilter

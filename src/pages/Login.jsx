@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Banner from '../components/Banner';
+import PasswordInput from '../components/PasswordInput';
 import logo from '../assets/logo.png';
 
 export default function Login() {
@@ -58,10 +59,8 @@ export default function Login() {
         </div>
         <div className="field">
           <label htmlFor="password">Mot de passe</label>
-          <input
+          <PasswordInput
             id="password"
-            className="input"
-            type="password"
             autoComplete="current-password"
             placeholder="••••••••"
             value={motDePasse}

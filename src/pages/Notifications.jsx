@@ -10,6 +10,12 @@ const TYPE_LABELS = {
   système: 'Système',
 };
 
+const ACCOUNT_TYPES = [
+  { value: '', label: 'Tous les comptes' },
+  { value: 'client', label: 'Clients' },
+  { value: 'marchand', label: 'Marchands' },
+];
+
 const PAGE_SIZE = 25;
 
 function SendForm({ onSent }) {
@@ -116,6 +122,7 @@ function SendForm({ onSent }) {
 
 export default function Notifications() {
   const [type, setType] = useState('');
+  const [typeDestinataire, setTypeDestinataire] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [list, setList] = useState([]);
@@ -130,6 +137,7 @@ export default function Notifications() {
     setError('');
     const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: '0' });
     if (type) params.set('type', type);
+    if (typeDestinataire) params.set('typeDestinataire', typeDestinataire);
     if (dateDebut) params.set('dateDebut', dateDebut);
     if (dateFin) params.set('dateFin', dateFin);
     return api
@@ -141,7 +149,7 @@ export default function Notifications() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [type, dateDebut, dateFin]);
+  }, [type, typeDestinataire, dateDebut, dateFin]);
 
   useEffect(() => {
     load();
@@ -153,6 +161,7 @@ export default function Notifications() {
     try {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
       if (type) params.set('type', type);
+      if (typeDestinataire) params.set('typeDestinataire', typeDestinataire);
       if (dateDebut) params.set('dateDebut', dateDebut);
       if (dateFin) params.set('dateFin', dateFin);
       const data = await api.get(`/admin/notifications?${params.toString()}`);
@@ -187,6 +196,16 @@ export default function Notifications() {
             </button>
           ))}
         </div>
+        <select
+          className="input"
+          style={{ maxWidth: 220 }}
+          value={typeDestinataire}
+          onChange={(e) => setTypeDestinataire(e.target.value)}
+        >
+          {ACCOUNT_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
         <DateRangeFilter
           dateDebut={dateDebut}
           dateFin={dateFin}
