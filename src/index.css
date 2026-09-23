@@ -172,12 +172,24 @@ select.input {
 .input::placeholder {
   color: var(--text-muted);
 }
-.password-field {
+.icon-field {
   position: relative;
   display: flex;
 }
 .input-with-toggle {
   padding-right: 40px;
+}
+.input-with-icon {
+  padding-left: 40px;
+}
+.field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.85rem;
 }
 .password-toggle {
   position: absolute;
@@ -682,42 +694,111 @@ table.data-table {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at top, #1a0a14 0%, #000000 55%);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(39, 170, 225, 0.28), transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(146, 39, 143, 0.24), transparent 45%),
+    radial-gradient(ellipse at top, #0c1420 0%, #05070d 60%);
   padding: 24px;
 }
 .login-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 380px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 32px 28px;
+  max-width: 400px;
+  background: linear-gradient(160deg, rgba(39, 170, 225, 0.14), rgba(0, 169, 157, 0.06) 60%, rgba(21, 21, 28, 0.5));
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(0, 169, 157, 0.3);
+  border-radius: 28px;
+  padding: 40px 32px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  box-shadow: 0 0 40px rgba(0, 169, 157, 0.2), 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(0, 220, 200, 0.9), rgba(39, 170, 225, 0.25) 45%, transparent 75%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 .login-logo {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 6px;
 }
-.login-logo img {
-  width: 96px;
-  height: 96px;
-  border-radius: 20px;
-  object-fit: cover;
+.login-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(0, 220, 200, 0.55);
+  box-shadow: 0 0 26px rgba(0, 189, 179, 0.5), inset 0 0 18px rgba(0, 189, 179, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.login-avatar img {
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
 }
 .login-logo h1 {
   font-size: 1.15rem;
   margin: 0;
+  text-align: center;
 }
 .login-logo p {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.8rem;
   text-align: center;
+}
+.login-card .field label {
+  color: rgba(255, 255, 255, 0.75);
+}
+.login-card .input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(0, 189, 179, 0.3);
+  border-radius: 999px;
+}
+.login-card .input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.login-card .input:focus {
+  border-color: var(--turquoise);
+  box-shadow: 0 0 0 3px rgba(0, 169, 157, 0.2);
+}
+.login-card .field-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+.login-card .password-toggle {
+  right: 8px;
+}
+.login-card .btn-cta {
+  margin-top: 6px;
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--turquoise), var(--blue));
+  color: #062024;
+  box-shadow: 0 10px 26px rgba(0, 169, 157, 0.35);
+}
+.login-card .btn-cta:hover:not(:disabled) {
+  filter: brightness(1.1);
 }
 
 /* ---------- Détail (utilisateur / marchand) ---------- */

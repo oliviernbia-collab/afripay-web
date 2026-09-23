@@ -6,14 +6,20 @@ import Icon from './Icon';
  * Password `<input>` with a show/hide toggle (eye icon). Drop-in
  * replacement for `<input type="password" className="input" ... />` —
  * forwards all other props (value, onChange, required, minLength, id,
- * autoComplete, etc.) to the underlying input.
+ * autoComplete, etc.) to the underlying input. Pass `icon` (a Font Awesome
+ * icon object) to also render a leading icon inside the field.
  */
-export default function PasswordInput({ className = 'input', ...props }) {
+export default function PasswordInput({ className = 'input', icon, ...props }) {
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className="password-field">
-      <input {...props} type={visible ? 'text' : 'password'} className={`${className} input-with-toggle`} />
+    <div className="icon-field">
+      {icon && <Icon icon={icon} size="sm" className="field-icon" />}
+      <input
+        {...props}
+        type={visible ? 'text' : 'password'}
+        className={`${className} input-with-toggle${icon ? ' input-with-icon' : ''}`}
+      />
       <button
         type="button"
         className="password-toggle"
