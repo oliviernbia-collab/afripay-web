@@ -55,13 +55,13 @@ function CreateForm({ onCreated }) {
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="field" style={{ flex: 1, minWidth: 160 }}>
-          <label>Mot de passe provisoire</label>
+          <label>Mot de passe provisoire (8 caractères min.)</label>
           <PasswordInput
             autoComplete="new-password"
             value={motDePasse}
             onChange={(e) => setMotDePasse(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
           />
         </div>
         <div className="field" style={{ minWidth: 180 }}>

@@ -128,13 +128,13 @@ function PasswordForm() {
         </div>
         <div className="row gap-12 wrap">
           <div className="field" style={{ flex: 1, minWidth: 180 }}>
-            <label>Nouveau mot de passe</label>
+            <label>Nouveau mot de passe (8 caractères min.)</label>
             <PasswordInput
               autoComplete="new-password"
               value={nouveauMotDePasse}
               onChange={(e) => setNouveauMotDePasse(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
           <div className="field" style={{ flex: 1, minWidth: 180 }}>
@@ -144,7 +144,7 @@ function PasswordForm() {
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
         </div>

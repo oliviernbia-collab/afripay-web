@@ -3,11 +3,18 @@
 // et convertit les réponses { success, data } / { success:false, message }
 // en valeurs/erreurs JS classiques.
 
-export const API_HOST = 'http://localhost:4000';
+// Configurable via VITE_API_URL (fichier .env, voir .env.example) — sans cette variable, un build
+// de production pointerait sur localhost et ne pourrait jamais atteindre un vrai serveur, et rien
+// ne garantirait HTTPS. En développement (aucune variable définie), on retombe sur localhost.
+export const API_HOST = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 export const API_BASE = `${API_HOST}/api`;
 
 function getAccessToken() {
   return localStorage.getItem('accessToken');
+}
+
+function getRefreshToken() {
+  return localStorage.getItem('refreshToken');
 }
 
 function clearSession() {
@@ -23,7 +30,45 @@ export function onUnauthorized(handler) {
   unauthorizedHandler = handler;
 }
 
-async function request(path, { method = 'GET', body, isForm = false, auth = true } = {}) {
+// Un seul rafraîchissement en vol à la fois : si plusieurs requêtes essuient un 401 en même
+// temps, elles partagent la même promesse au lieu de déclencher chacune leur propre appel à
+// /auth/refresh (qui ferait tourner le refreshToken plusieurs fois pour rien).
+let refreshPromise = null;
+
+async function refreshAccessToken() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+      .then(async (res) => {
+        const payload = await res.json().catch(() => null);
+        if (!res.ok || !payload?.success) return false;
+        localStorage.setItem('accessToken', payload.data.accessToken);
+        localStorage.setItem('refreshToken', payload.data.refreshToken);
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+async function doFetch(path, { method, headers, body, isForm }) {
+  return fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
+  });
+}
+
+async function request(path, { method = 'GET', body, isForm = false, auth = true, _retried = false } = {}) {
   const headers = {};
   if (!isForm && body !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -35,13 +80,22 @@ async function request(path, { method = 'GET', body, isForm = false, auth = true
 
   let response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
-    });
+    response = await doFetch(path, { method, headers, body, isForm });
   } catch {
     throw new Error('Impossible de contacter le serveur AfriPay. Vérifiez votre connexion.');
+  }
+
+  // Access token expiré (15 min) : on tente un rafraîchissement silencieux une seule fois avant
+  // de considérer la session comme terminée — sans ça, l'admin était déconnecté toutes les 15
+  // minutes d'usage actif alors qu'un refreshToken valide (30 jours) était déjà stocké mais
+  // jamais utilisé.
+  if (response.status === 401 && auth && !_retried && path !== '/auth/refresh') {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      return request(path, { method, body, isForm, auth, _retried: true });
+    }
+    clearSession();
+    if (unauthorizedHandler) unauthorizedHandler();
   }
 
   let payload = null;
@@ -51,7 +105,7 @@ async function request(path, { method = 'GET', body, isForm = false, auth = true
     // pas de corps JSON (ex: 204) — on continue avec payload=null
   }
 
-  if (response.status === 401 && auth) {
+  if (response.status === 401 && auth && _retried) {
     clearSession();
     if (unauthorizedHandler) unauthorizedHandler();
   }

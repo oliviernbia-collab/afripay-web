@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, fileUrl } from '../api/client';
+import { api } from '../api/client';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
+import DocImage from '../components/DocImage';
 import { formatDate } from '../utils/format';
 
 const DOC_LABELS = {
@@ -117,9 +118,8 @@ export default function Kyb() {
               {list.map((doc) => (
                 <tr key={doc.id} className="clickable" onClick={() => navigate(`/marchands/${doc.merchant_id}`)}>
                   <td>
-                    <img
-                      src={fileUrl(doc.fichier_ref)}
-                      alt=""
+                    <DocImage
+                      fichierRef={doc.fichier_ref}
                       style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', display: 'block' }}
                     />
                   </td>

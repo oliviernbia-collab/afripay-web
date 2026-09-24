@@ -2,10 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { api, fileUrl } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
 import Icon from '../components/Icon';
+import DocImage from '../components/DocImage';
 import { formatDate } from '../utils/format';
+
+const KYC_DECISION_ROLES = ['super_admin', 'conformite'];
 
 const DOC_LABELS = {
   cni: "Carte nationale d'identité",
@@ -16,6 +20,8 @@ const DOC_LABELS = {
 
 export default function UtilisateurDetail() {
   const { id } = useParams();
+  const { admin } = useAuth();
+  const canDecide = KYC_DECISION_ROLES.includes(admin?.role);
   const [user, setUser] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState('');
@@ -122,32 +128,38 @@ export default function UtilisateurDetail() {
               </div>
             </dl>
 
-            <div className="action-row">
-              <button
-                type="button"
-                className="btn btn-success"
-                disabled={!!actionLoading}
-                onClick={() => handleDecision('validé')}
-              >
-                {actionLoading === 'validé' ? 'Validation…' : 'Valider'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                disabled={!!actionLoading}
-                onClick={() => handleDecision('rejeté')}
-              >
-                {actionLoading === 'rejeté' ? 'Rejet…' : 'Rejeter'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-warning"
-                disabled={!!actionLoading}
-                onClick={() => handleDecision('suspendu')}
-              >
-                {actionLoading === 'suspendu' ? 'Suspension…' : 'Suspendre'}
-              </button>
-            </div>
+            {canDecide ? (
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  disabled={!!actionLoading}
+                  onClick={() => handleDecision('validé')}
+                >
+                  {actionLoading === 'validé' ? 'Validation…' : 'Valider'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={!!actionLoading}
+                  onClick={() => handleDecision('rejeté')}
+                >
+                  {actionLoading === 'rejeté' ? 'Rejet…' : 'Rejeter'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  disabled={!!actionLoading}
+                  onClick={() => handleDecision('suspendu')}
+                >
+                  {actionLoading === 'suspendu' ? 'Suspension…' : 'Suspendre'}
+                </button>
+              </div>
+            ) : (
+              <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
+                Les décisions KYC sont réservées aux rôles Conformité et Super admin.
+              </p>
+            )}
           </div>
 
           <div className="card">
@@ -163,7 +175,7 @@ export default function UtilisateurDetail() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <img src={fileUrl(doc.fichier_ref)} alt={DOC_LABELS[doc.type_document] || doc.type_document} />
+                    <DocImage fichierRef={doc.fichier_ref} alt={DOC_LABELS[doc.type_document] || doc.type_document} />
                     <div className="doc-tile-label">
                       <span>{DOC_LABELS[doc.type_document] || doc.type_document}</span>
                       <StatusBadge status={doc.statut} />

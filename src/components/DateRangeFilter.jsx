@@ -15,8 +15,8 @@ export default function DateRangeFilter({ dateDebut, dateFin, onDateDebutChange,
   const hasValue = !!(dateDebut || dateFin);
 
   return (
-    <div className="row gap-8" style={{ alignItems: 'center' }}>
-      <div className="field" style={{ gap: 2 }}>
+    <div className="row gap-8" style={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 8 }}>
+      <div className="field" style={{ gap: 2, flex: '1 1 130px', minWidth: 130, maxWidth: 180 }}>
         <label style={{ fontSize: '0.72rem' }}>Du</label>
         <input
           className="input"
@@ -24,10 +24,10 @@ export default function DateRangeFilter({ dateDebut, dateFin, onDateDebutChange,
           value={dateDebut || ''}
           max={dateFin || undefined}
           onChange={(e) => onDateDebutChange(e.target.value)}
-          style={{ width: 152 }}
+          style={{ width: '100%' }}
         />
       </div>
-      <div className="field" style={{ gap: 2 }}>
+      <div className="field" style={{ gap: 2, flex: '1 1 130px', minWidth: 130, maxWidth: 180 }}>
         <label style={{ fontSize: '0.72rem' }}>Au</label>
         <input
           className="input"
@@ -35,7 +35,7 @@ export default function DateRangeFilter({ dateDebut, dateFin, onDateDebutChange,
           value={dateFin || ''}
           min={dateDebut || undefined}
           onChange={(e) => onDateFinChange(e.target.value)}
-          style={{ width: 152 }}
+          style={{ width: '100%' }}
         />
       </div>
       {hasValue && (

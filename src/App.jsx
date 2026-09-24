@@ -44,10 +44,31 @@ export default function App() {
             <Route path="/wallets" element={<Wallets />} />
             <Route path="/recharges" element={<Recharges />} />
             <Route path="/biometrie" element={<Biometrie />} />
-            <Route path="/fraude" element={<Fraude />} />
+            <Route
+              path="/fraude"
+              element={
+                <ProtectedRoute roles={['super_admin', 'conformite']}>
+                  <Fraude />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/notifications" element={<Notifications />} />
-            <Route path="/internes" element={<Internes />} />
-            <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route
+              path="/internes"
+              element={
+                <ProtectedRoute roles={['super_admin']}>
+                  <Internes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/audit-logs"
+              element={
+                <ProtectedRoute roles={['super_admin', 'conformite']}>
+                  <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/profil" element={<Profil />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

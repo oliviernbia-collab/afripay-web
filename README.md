@@ -26,19 +26,17 @@ npm install
 npm run dev
 ```
 
-L'application est servie sur `http://localhost:5173`. Elle appelle
-l'API sur `http://localhost:4000/api` (URL codée en dur dans
-`src/api/client.js` — adapter cette constante si le backend tourne
-ailleurs).
+L'application est servie sur `http://localhost:5173`. Elle appelle l'API sur l'URL définie par la
+variable d'environnement `VITE_API_URL` (voir `.env.example` — copier en `.env` et adapter si le
+backend tourne ailleurs) ; par défaut `http://localhost:4000`. En production, cette variable doit
+pointer vers une URL HTTPS.
 
 ## Compte super admin
 
-```
-Email        : olivier@gmail.com
-Mot de passe : olivier1999
-```
-
-(compte seed du backend — à changer avant toute mise en production).
+Créé par `npm run db:init` côté backend (voir `backend/README.md`) : le mot de passe est généré
+aléatoirement et affiché **une seule fois** en console à la création (ou fixé via
+`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` dans `backend/.env`). Aucun identifiant n'est committé
+dans le dépôt. Changez-le dès la première connexion (Profil > Mot de passe).
 
 ## Build de production
 
