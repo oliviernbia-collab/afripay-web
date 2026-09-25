@@ -149,7 +149,7 @@ export default function Internes() {
 
       {!loading && list.length > 0 && (
         <div className="table-wrap" style={{ marginTop: 20 }}>
-          <table className="data-table">
+          <table className="data-table data-table-stack">
             <thead>
               <tr>
                 <th>Nom</th>
@@ -163,9 +163,9 @@ export default function Internes() {
             <tbody>
               {list.map((a) => (
                 <tr key={a.id}>
-                  <td>{a.nom} {a.id === currentAdmin?.id && <span className="text-muted">(vous)</span>}</td>
-                  <td className="text-secondary">{a.email}</td>
-                  <td>
+                  <td data-label="Nom">{a.nom} {a.id === currentAdmin?.id && <span className="text-muted">(vous)</span>}</td>
+                  <td className="text-secondary" data-label="Email">{a.email}</td>
+                  <td data-label="Rôle">
                     <select
                       className="input"
                       style={{ maxWidth: 200 }}
@@ -178,11 +178,11 @@ export default function Internes() {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td data-label="Statut">
                     <span className={`badge badge-${a.actif ? 'green' : 'grey'}`}>{a.actif ? 'Actif' : 'Désactivé'}</span>
                   </td>
-                  <td className="text-secondary">{formatDate(a.date_creation)}</td>
-                  <td>
+                  <td className="text-secondary" data-label="Créé le">{formatDate(a.date_creation)}</td>
+                  <td data-label="Action">
                     <button
                       type="button"
                       className={`btn btn-sm ${a.actif ? 'btn-danger' : 'btn-success'}`}

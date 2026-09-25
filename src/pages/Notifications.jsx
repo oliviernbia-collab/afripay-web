@@ -19,6 +19,7 @@ const ACCOUNT_TYPES = [
 const PAGE_SIZE = 25;
 
 function SendForm({ onSent }) {
+  const [cible, setCible] = useState('un'); // 'un' destinataire précis, ou 'tous' en diffusion
   const [typeDestinataire, setTypeDestinataire] = useState('client');
   const [telephone, setTelephone] = useState('');
   const [type, setType] = useState('système');
@@ -28,30 +29,53 @@ function SendForm({ onSent }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const destinataireLabel = typeDestinataire === 'client' ? 'clients' : 'marchands';
+
   async function handleSubmit(e) {
     e.preventDefault();
-    setSending(true);
     setError('');
     setSuccess('');
-    try {
-      // Résout le téléphone en identifiant via les listes Clients/Marchands déjà exposées.
-      const searchPath =
-        typeDestinataire === 'client'
-          ? `/admin/utilisateurs?search=${encodeURIComponent(telephone)}&limit=5`
-          : `/admin/marchands?search=${encodeURIComponent(telephone)}&limit=5`;
-      const matches = await api.get(searchPath);
-      const match = matches.find((m) => m.telephone === telephone) || matches[0];
-      if (!match) throw new Error("Aucun compte trouvé avec ce numéro de téléphone.");
 
-      await api.post('/admin/notifications', {
-        destinataireId: match.id,
-        typeDestinataire,
-        type,
-        titre,
-        contenu,
-      });
-      setSuccess(`Notification envoyée à ${match.prenom ? `${match.prenom} ` : ''}${match.nom || match.raison_sociale}.`);
-      setTelephone('');
+    if (cible === 'tous') {
+      const confirmed = window.confirm(
+        `Envoyer cette notification à TOUS les ${destinataireLabel} enregistrés sur la plateforme ?`
+      );
+      if (!confirmed) return;
+    }
+
+    setSending(true);
+    try {
+      if (cible === 'tous') {
+        const { nombreDestinataires } = await api.post('/admin/notifications', {
+          typeDestinataire,
+          type,
+          titre,
+          contenu,
+          tous: true,
+        });
+        setSuccess(`Notification envoyée à ${nombreDestinataires} ${destinataireLabel}.`);
+      } else {
+        // Résout le téléphone en identifiant via les listes Clients/Marchands déjà exposées.
+        const searchPath =
+          typeDestinataire === 'client'
+            ? `/admin/utilisateurs?search=${encodeURIComponent(telephone)}&limit=5`
+            : `/admin/marchands?search=${encodeURIComponent(telephone)}&limit=5`;
+        const matches = await api.get(searchPath);
+        const match = matches.find((m) => m.telephone === telephone) || matches[0];
+        if (!match) throw new Error("Aucun compte trouvé avec ce numéro de téléphone.");
+
+        await api.post('/admin/notifications', {
+          destinataireId: match.id,
+          typeDestinataire,
+          type,
+          titre,
+          contenu,
+        });
+        setSuccess(
+          `Notification envoyée à ${match.prenom ? `${match.prenom} ` : ''}${match.nom || match.raison_sociale}.`
+        );
+        setTelephone('');
+      }
       setTitre('');
       setContenu('');
       onSent?.();
@@ -68,24 +92,38 @@ function SendForm({ onSent }) {
       <Banner type="error" message={error} onClose={() => setError('')} />
       <Banner type="success" message={success} onClose={() => setSuccess('')} />
       <form onSubmit={handleSubmit} className="stack gap-12">
+        <div className="tabs">
+          <button type="button" className={`tab${cible === 'un' ? ' active' : ''}`} onClick={() => setCible('un')}>
+            Un destinataire
+          </button>
+          <button
+            type="button"
+            className={`tab${cible === 'tous' ? ' active' : ''}`}
+            onClick={() => setCible('tous')}
+          >
+            Tous les clients ou marchands
+          </button>
+        </div>
         <div className="row gap-12 wrap">
           <div className="field" style={{ flex: 1, minWidth: 160 }}>
             <label>Destinataire</label>
             <select className="input" value={typeDestinataire} onChange={(e) => setTypeDestinataire(e.target.value)}>
-              <option value="client">Client</option>
-              <option value="marchand">Marchand</option>
+              <option value="client">{cible === 'tous' ? 'Tous les clients' : 'Client'}</option>
+              <option value="marchand">{cible === 'tous' ? 'Tous les marchands' : 'Marchand'}</option>
             </select>
           </div>
-          <div className="field" style={{ flex: 2, minWidth: 200 }}>
-            <label>Téléphone</label>
-            <input
-              className="input"
-              value={telephone}
-              onChange={(e) => setTelephone(e.target.value)}
-              placeholder="+225 07 00 00 00 00"
-              required
-            />
-          </div>
+          {cible === 'un' && (
+            <div className="field" style={{ flex: 2, minWidth: 200 }}>
+              <label>Téléphone</label>
+              <input
+                className="input"
+                value={telephone}
+                onChange={(e) => setTelephone(e.target.value)}
+                placeholder="+225 07 00 00 00 00"
+                required
+              />
+            </div>
+          )}
           <div className="field" style={{ flex: 1, minWidth: 160 }}>
             <label>Type</label>
             <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
@@ -95,6 +133,11 @@ function SendForm({ onSent }) {
             </select>
           </div>
         </div>
+        {cible === 'tous' && (
+          <p className="text-secondary" style={{ margin: 0, fontSize: '0.82rem' }}>
+            Cette notification sera envoyée en une seule fois à tous les {destinataireLabel} enregistrés.
+          </p>
+        )}
         <div className="field">
           <label>Titre</label>
           <input className="input" value={titre} onChange={(e) => setTitre(e.target.value)} required maxLength={150} />
@@ -112,7 +155,7 @@ function SendForm({ onSent }) {
         </div>
         <div>
           <button type="submit" className="btn btn-cta" disabled={sending}>
-            {sending ? 'Envoi…' : 'Envoyer la notification'}
+            {sending ? 'Envoi…' : cible === 'tous' ? `Envoyer à tous les ${destinataireLabel}` : 'Envoyer la notification'}
           </button>
         </div>
       </form>
@@ -225,7 +268,7 @@ export default function Notifications() {
       {!loading && list.length > 0 && (
         <>
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table data-table-stack">
               <thead>
                 <tr>
                   <th>Type</th>
@@ -239,12 +282,12 @@ export default function Notifications() {
               <tbody>
                 {list.map((n) => (
                   <tr key={n.id}>
-                    <td><span className="badge badge-blue">{TYPE_LABELS[n.type] || n.type}</span></td>
-                    <td>{n.titre}</td>
-                    <td className="text-secondary">{n.contenu}</td>
-                    <td className="text-secondary">{n.type_destinataire}</td>
-                    <td>{n.lu ? 'Oui' : <span className="text-muted">Non</span>}</td>
-                    <td className="text-secondary">{formatDate(n.date_creation)}</td>
+                    <td data-label="Type"><span className="badge badge-blue">{TYPE_LABELS[n.type] || n.type}</span></td>
+                    <td data-label="Titre">{n.titre}</td>
+                    <td className="text-secondary" data-label="Contenu">{n.contenu}</td>
+                    <td className="text-secondary" data-label="Destinataire">{n.type_destinataire}</td>
+                    <td data-label="Lu">{n.lu ? 'Oui' : <span className="text-muted">Non</span>}</td>
+                    <td className="text-secondary" data-label="Date">{formatDate(n.date_creation)}</td>
                   </tr>
                 ))}
               </tbody>

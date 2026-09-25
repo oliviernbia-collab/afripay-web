@@ -148,7 +148,7 @@ export default function Wallets() {
       {!loading && list.length > 0 && (
         <>
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table data-table-stack">
               <thead>
                 <tr>
                   <th>Titulaire</th>
@@ -161,19 +161,19 @@ export default function Wallets() {
               <tbody>
                 {list.map((w) => (
                   <tr key={w.id}>
-                    <td>
+                    <td data-label="Titulaire">
                       {w.proprietaire_nom
                         ? `${w.proprietaire_prenom ? `${w.proprietaire_prenom} ` : ''}${w.proprietaire_nom}`
                         : <span className="text-muted">Marchand particulier</span>}
                     </td>
-                    <td>
+                    <td data-label="Type">
                       <span className={`badge badge-${w.type_propriétaire === 'client' ? 'blue' : 'violet'}`}>
                         {w.type_propriétaire === 'client' ? 'Client' : 'Marchand'}
                       </span>
                     </td>
-                    <td className="text-secondary">{w.proprietaire_telephone}</td>
-                    <td style={{ fontWeight: 600 }}>{formatFcfa(w.solde)}</td>
-                    <td className="text-secondary">{formatDate(w.date_maj)}</td>
+                    <td className="text-secondary" data-label="Téléphone">{w.proprietaire_telephone}</td>
+                    <td style={{ fontWeight: 600 }} data-label="Solde">{formatFcfa(w.solde)}</td>
+                    <td className="text-secondary" data-label="Dernière mise à jour">{formatDate(w.date_maj)}</td>
                   </tr>
                 ))}
               </tbody>

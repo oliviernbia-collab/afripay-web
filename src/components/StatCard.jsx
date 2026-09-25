@@ -1,8 +1,11 @@
 import Icon from './Icon';
 
-export default function StatCard({ label, value, sub, accent, icon }) {
+export default function StatCard({ label, value, sub, accent, icon, compact }) {
   return (
-    <div className="stat-card" style={accent ? { '--accent': accent } : undefined}>
+    <div
+      className={compact ? 'stat-card stat-card-compact' : 'stat-card'}
+      style={accent ? { '--accent': accent } : undefined}
+    >
       {icon && (
         <span className="stat-icon">
           <Icon icon={icon} />

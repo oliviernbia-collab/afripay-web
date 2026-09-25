@@ -139,7 +139,7 @@ export default function Transactions() {
       {!loading && list.length > 0 && (
         <>
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table data-table-stack">
               <thead>
                 <tr>
                   <th>Référence</th>
@@ -153,17 +153,17 @@ export default function Transactions() {
               <tbody>
                 {list.map((tx) => (
                   <tr key={tx.id}>
-                    <td>
+                    <td data-label="Référence">
                       <div className="stack" style={{ gap: 2 }}>
                         <span>{tx.reference || tx.id.slice(0, 8)}</span>
                         {tx.libelle && <span className="text-muted" style={{ fontSize: '0.76rem' }}>{tx.libelle}</span>}
                       </div>
                     </td>
-                    <td>{typeLabel(tx.type)}</td>
-                    <td>{formatFcfa(tx.montant)}</td>
-                    <td className="text-secondary">{methodLabel(tx.méthode)}</td>
-                    <td><StatusBadge status={tx.statut} /></td>
-                    <td className="text-secondary">{formatDate(tx.date_heure)}</td>
+                    <td data-label="Type">{typeLabel(tx.type)}</td>
+                    <td data-label="Montant">{formatFcfa(tx.montant)}</td>
+                    <td className="text-secondary" data-label="Méthode">{methodLabel(tx.méthode)}</td>
+                    <td data-label="Statut"><StatusBadge status={tx.statut} /></td>
+                    <td className="text-secondary" data-label="Date">{formatDate(tx.date_heure)}</td>
                   </tr>
                 ))}
               </tbody>

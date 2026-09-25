@@ -48,6 +48,10 @@ body {
   min-height: 100vh;
 }
 
+img {
+  max-width: 100%;
+}
+
 a {
   color: var(--blue);
   text-decoration: none;
@@ -297,12 +301,58 @@ select.input {
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  /* Barre de défilement horizontale toujours visible et stylée plutôt que la fine barre système
+     qui s'efface hors interaction (particulièrement sur mobile) — sans elle, rien n'indique qu'un
+     tableau plus large que l'écran cache des colonnes. */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--turquoise) var(--bg-alt);
+}
+.table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+.table-wrap::-webkit-scrollbar-track {
+  background: var(--bg-alt);
+}
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--turquoise);
+  border-radius: 999px;
+}
+.table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--blue);
+}
+/* iOS Safari masque tout de même la barre au repos, quel que soit le style — ce texte reste le
+   seul indice fiable sur ces appareils qu'il faut glisser pour voir les colonnes hors champ. */
+.table-scroll-hint {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+@media (max-width: 768px) {
+  .table-scroll-hint {
+    display: flex;
+  }
 }
 table.data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
   min-width: 640px;
+}
+/* Table à peu de colonnes (ex: liste d'enrôlements) : pas besoin d'imposer 640px. table-layout:
+   fixed force les colonnes à se partager 100% de la largeur du conteneur (au lieu de s'ajuster
+   au contenu et déborder), et les cellules passent à la ligne plutôt que de forcer un défilement
+   horizontal qui couperait du texte hors champ sans que ce soit visible. */
+.data-table-fluid {
+  min-width: 0;
+  table-layout: fixed;
+}
+.data-table-fluid th,
+.data-table-fluid td {
+  overflow-wrap: break-word;
 }
 .data-table thead th {
   text-align: left;
@@ -331,6 +381,61 @@ table.data-table {
 }
 .data-table tbody tr.clickable:hover {
   background: var(--card-alt);
+}
+/* Tableau "empilé" en mobile : chaque ligne devient une carte, chaque cellule une rangée
+   label/valeur (le label vient de l'attribut data-label posé sur chaque <td>) — plus aucune
+   colonne n'est hors champ, donc plus besoin de défilement horizontal ni d'indice pour le
+   trouver. Technique volontairement générique (une seule règle CSS) pour s'appliquer à toutes
+   les tables du site sans dupliquer de balisage par page : il suffit d'ajouter la classe
+   data-table-stack à la <table> et un data-label sur chaque <td>. */
+@media (max-width: 768px) {
+  /* table.data-table (élément+classe) impose min-width:640px avec une spécificité plus forte
+     qu'une simple classe .data-table-stack — sans le sélecteur composé ci-dessous, ce plancher
+     l'emportait silencieusement : la table restait large de 640px, "empilée" seulement en
+     apparence, et les valeurs (poussées à droite par space-between) sortaient du cadre visible
+     hors de toute portée de défilement évidente. Repéré et corrigé après capture d'écran réelle. */
+  table.data-table-stack {
+    min-width: 0;
+  }
+  .data-table-stack thead {
+    display: none;
+  }
+  .data-table-stack,
+  .data-table-stack tbody,
+  .data-table-stack tr {
+    display: block;
+    width: 100%;
+  }
+  .data-table-stack tr {
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+  }
+  .data-table-stack tbody tr:last-child {
+    border-bottom: none;
+  }
+  .data-table-stack tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: none;
+    text-align: right;
+  }
+  .data-table-stack td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 40%;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: left;
+  }
+  .data-table-stack td:empty {
+    display: none;
+  }
 }
 
 /* ---------- Utilitaires de mise en page ---------- */
@@ -604,7 +709,12 @@ table.data-table {
 /* ---------- Dashboard ---------- */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* minmax(220px, 1fr) seul ne rétrécit jamais sous 220px même si le conteneur est plus étroit —
+     ça déborde silencieusement (page.scrollWidth > viewport) plutôt que de passer à 1 colonne.
+     min(220px, 100%) plafonne le plancher à la largeur réellement disponible. Bug détecté et
+     corrigé après mesure directe (scrollWidth vs clientWidth), pas seulement à l'oeil sur capture
+     d'écran — une capture "fullPage" inclut le contenu débordant et masque ce genre de problème. */
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -671,7 +781,7 @@ table.data-table {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .chart-card {
+  .dash-card {
     animation: none !important;
   }
   .cmp-bar-fill {
@@ -696,55 +806,86 @@ table.data-table {
   border-radius: 999px;
   background: var(--accent, var(--turquoise));
 }
-.dash-section-grid {
+.dash-cards-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
   align-items: stretch;
 }
-.dash-stat-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+@media (max-width: 980px) {
+  .dash-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-.dash-stat-col .stat-card {
-  flex: 1;
-  justify-content: center;
-}
-.dash-charts-pair {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-@media (max-width: 900px) {
-  .dash-section-grid {
+@media (max-width: 620px) {
+  .dash-cards-grid {
     grid-template-columns: 1fr;
   }
 }
-.chart-card {
+.dash-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent, var(--turquoise));
+  border-radius: var(--radius-md);
+  padding: 16px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   animation: chart-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
-.chart-card:nth-child(1) {
+.dash-card:nth-child(1) {
   animation-delay: 0ms;
 }
-.chart-card:nth-child(2) {
+.dash-card:nth-child(2) {
   animation-delay: 90ms;
 }
-.chart-card:nth-child(3) {
+.dash-card:nth-child(3) {
   animation-delay: 180ms;
 }
-.chart-card-title {
-  font-size: 0.92rem;
+.dash-card-stat-only {
+  justify-content: center;
+}
+.dash-card .stat-card-compact {
+  border: none;
+  padding: 2px 0 0;
+  background: none;
+  overflow: visible;
+}
+.dash-card .stat-card-compact::before {
+  display: none;
+}
+.dash-card-chart-title {
+  font-size: 0.86rem;
   font-weight: 600;
-  margin: 0;
+  margin: 4px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 .chart-card-sub {
-  margin: -10px 0 0;
-  font-size: 0.78rem;
+  margin: -6px 0 0;
+  font-size: 0.76rem;
   color: var(--text-secondary);
+}
+.stat-card-compact {
+  padding: 14px 16px;
+  gap: 4px;
+}
+.stat-card-compact .stat-icon {
+  width: 26px;
+  height: 26px;
+  top: 12px;
+  right: 14px;
+  font-size: 0.78rem;
+}
+.stat-card-compact .stat-label {
+  font-size: 0.76rem;
+  padding-right: 32px;
+}
+.stat-card-compact .stat-value {
+  font-size: 1.32rem;
+}
+.stat-card-compact .stat-sub {
+  font-size: 0.74rem;
 }
 .donut-wrap {
   display: flex;
@@ -805,22 +946,45 @@ table.data-table {
 .donut-legend-value {
   font-weight: 700;
 }
+.donut-compare {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.donut-compare-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.donut-compare-item .donut-center-value {
+  font-size: 1.2rem;
+}
+.donut-compare-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
 .cmp-bar-chart {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 .cmp-bar-row-head {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 8px;
-  margin-bottom: 6px;
-  font-size: 0.82rem;
+  margin-bottom: 5px;
+  font-size: 0.8rem;
 }
 .cmp-bar-dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -831,18 +995,118 @@ table.data-table {
 }
 .cmp-bar-value {
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .cmp-bar-track {
-  height: 10px;
+  position: relative;
+  height: 14px;
   border-radius: 999px;
-  background: var(--bg-alt);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--bg-alt) 0,
+    var(--bg-alt) 24.75%,
+    color-mix(in srgb, var(--border) 55%, transparent) 24.75%,
+    color-mix(in srgb, var(--border) 55%, transparent) 25%
+  );
   border: 1px solid var(--border);
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .cmp-bar-fill {
+  position: relative;
   height: 100%;
   border-radius: 999px;
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%);
+  box-shadow: 0 0 8px -1px color-mix(in srgb, currentColor 60%, transparent);
+}
+.band-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.band-chart-plot {
+  position: relative;
+}
+.band-chart-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.band-chart-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--border);
+}
+.band-chart-baseline {
+  border-top: 1px solid var(--border);
+}
+.band-chart-bars {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 20px;
+  padding: 0 4px;
+}
+.band-chart-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+  flex: 1;
+  max-width: 100px;
+}
+.band-chart-value {
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.band-chart-bar-track {
+  width: 100%;
+  max-width: 54px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.band-chart-bar-fill {
+  width: 100%;
+  border-radius: 8px 8px 4px 4px;
+  transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 55%);
+  box-shadow: 0 0 10px -2px color-mix(in srgb, currentColor 55%, transparent);
+}
+.band-chart-labels {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  padding: 0 4px;
+}
+.band-chart-label-item {
+  flex: 1;
+  max-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+.band-chart-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .band-chart-bar-fill {
+    transition: none !important;
+  }
 }
 .alert-callout {
   display: flex;
@@ -870,7 +1134,7 @@ table.data-table {
 }
 .section-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -1001,7 +1265,7 @@ table.data-table {
 }
 .info-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   gap: 14px;
   margin: 0;
 }
@@ -1176,4 +1440,17 @@ table.data-table {
     width: 78vw;
     max-width: 280px;
   }
+}
+
+/* .section-grid's default auto-fit(280px) lets a 2nd column appear as soon as ~576px of content
+   width is available — but under 768px the logs table now stacks into cards (.data-table-stack)
+   so it needs very little width; above 768px it's a real 640px-min table again, which a 280px-
+   -floor 2nd column can't fit. Raise the minimum so a 2nd column only appears once each one can
+   comfortably fit that table. IMPORTANT: minmax(680px, 1fr) alone does not shrink below 680px
+   even when the container itself is narrower — it forced real horizontal *page* overflow at every
+   width under ~680px+sidebar+padding, confirmed by measuring scrollWidth vs clientWidth directly
+   (a fullPage screenshot had hidden this, since it captures the overflowing area as if it were
+   all on-screen). min(680px, 100%) caps the floor at the available width instead. */
+.biometrie-section-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(680px, 100%), 1fr));
 }

@@ -81,13 +81,13 @@ export default function Biometrie() {
         </div>
       )}
 
-      <div className="section-grid">
+      <div className="section-grid biometrie-section-grid">
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Derniers enrôlements actifs</h3>
           {enrolments.length === 0 && <p className="text-secondary">Aucun enrôlement pour le moment.</p>}
           {enrolments.length > 0 && (
             <div className="table-wrap">
-              <table className="data-table">
+              <table className="data-table data-table-fluid">
                 <thead>
                   <tr>
                     <th>Client</th>
@@ -144,7 +144,7 @@ export default function Biometrie() {
 
           {!loading && logs.length > 0 && (
             <div className="table-wrap">
-              <table className="data-table">
+              <table className="data-table data-table-stack">
                 <thead>
                   <tr>
                     <th>Résultat</th>
@@ -158,16 +158,18 @@ export default function Biometrie() {
                 <tbody>
                   {logs.map((l) => (
                     <tr key={l.id}>
-                      <td>
+                      <td data-label="Résultat">
                         <span className={`badge badge-${l.resultat === 'succes' ? 'green' : 'red'}`}>
                           {l.resultat === 'succes' ? 'Succès' : 'Échec'}
                         </span>
                       </td>
-                      <td>{l.user_nom ? `${l.user_prenom} ${l.user_nom}` : <span className="text-muted">—</span>}</td>
-                      <td>{l.marchand_nom || <span className="text-muted">—</span>}</td>
-                      <td className="text-secondary">{l.motif || '—'}</td>
-                      <td className="text-secondary">{l.adresse_ip || '—'}</td>
-                      <td className="text-secondary">{formatDate(l.date_heure)}</td>
+                      <td data-label="Client identifié">
+                        {l.user_nom ? `${l.user_prenom} ${l.user_nom}` : <span className="text-muted">—</span>}
+                      </td>
+                      <td data-label="Marchand">{l.marchand_nom || <span className="text-muted">—</span>}</td>
+                      <td className="text-secondary" data-label="Motif">{l.motif || '—'}</td>
+                      <td className="text-secondary" data-label="IP">{l.adresse_ip || '—'}</td>
+                      <td className="text-secondary" data-label="Date">{formatDate(l.date_heure)}</td>
                     </tr>
                   ))}
                 </tbody>

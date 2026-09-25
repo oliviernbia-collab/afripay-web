@@ -29,7 +29,12 @@ export default function BarCompareChart({ items }) {
             <div className="cmp-bar-track">
               <div
                 className="cmp-bar-fill"
-                style={{ width: grown ? `${pct}%` : 0, background: item.color, transitionDelay: `${i * 90}ms` }}
+                style={{
+                  width: grown ? `${pct}%` : 0,
+                  backgroundColor: item.color,
+                  color: item.color,
+                  transitionDelay: `${i * 90}ms`,
+                }}
               />
             </div>
           </div>

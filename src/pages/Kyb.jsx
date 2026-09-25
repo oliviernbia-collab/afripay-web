@@ -26,7 +26,7 @@ const TABS = [
 ];
 
 export default function Kyb() {
-  const [statut, setStatut] = useState('en_attente');
+  const [statut, setStatut] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [list, setList] = useState([]);
@@ -102,7 +102,7 @@ export default function Kyb() {
 
       {!loading && list.length > 0 && (
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table data-table-stack">
             <thead>
               <tr>
                 <th>Aperçu</th>
@@ -117,18 +117,18 @@ export default function Kyb() {
             <tbody>
               {list.map((doc) => (
                 <tr key={doc.id} className="clickable" onClick={() => navigate(`/marchands/${doc.merchant_id}`)}>
-                  <td>
+                  <td data-label="Aperçu">
                     <DocImage
                       fichierRef={doc.fichier_ref}
                       style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', display: 'block' }}
                     />
                   </td>
-                  <td>{doc.raison_sociale || <span className="text-muted">Particulier</span>}</td>
-                  <td className="text-secondary">{doc.telephone}</td>
-                  <td>{DOC_LABELS[doc.type_document] || doc.type_document}</td>
-                  <td><StatusBadge status={doc.statut} /></td>
-                  <td><StatusBadge status={doc.statut_kyb} /></td>
-                  <td className="text-secondary">{formatDate(doc.date_soumission)}</td>
+                  <td data-label="Marchand">{doc.raison_sociale || <span className="text-muted">Particulier</span>}</td>
+                  <td className="text-secondary" data-label="Téléphone">{doc.telephone}</td>
+                  <td data-label="Document">{DOC_LABELS[doc.type_document] || doc.type_document}</td>
+                  <td data-label="Statut document"><StatusBadge status={doc.statut} /></td>
+                  <td data-label="Statut KYB"><StatusBadge status={doc.statut_kyb} /></td>
+                  <td className="text-secondary" data-label="Soumis le">{formatDate(doc.date_soumission)}</td>
                 </tr>
               ))}
             </tbody>

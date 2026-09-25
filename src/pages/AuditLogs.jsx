@@ -125,7 +125,7 @@ export default function AuditLogs() {
       {!loading && list.length > 0 && (
         <>
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table data-table-stack">
               <thead>
                 <tr>
                   <th>Action</th>
@@ -138,11 +138,11 @@ export default function AuditLogs() {
               <tbody>
                 {list.map((log) => (
                   <tr key={log.id}>
-                    <td><span className="badge badge-violet">{ACTION_LABELS[log.action] || log.action}</span></td>
-                    <td>{log.admin_nom || <span className="text-muted">—</span>}</td>
-                    <td className="text-secondary">{log.cible_type ? `${log.cible_type} · ${log.cible_id?.slice(0, 8)}…` : '—'}</td>
-                    <td className="text-secondary" style={{ maxWidth: 320 }}>{formatDetails(log.détails)}</td>
-                    <td className="text-secondary">{formatDate(log.date_heure)}</td>
+                    <td data-label="Action"><span className="badge badge-violet">{ACTION_LABELS[log.action] || log.action}</span></td>
+                    <td data-label="Effectuée par">{log.admin_nom || <span className="text-muted">—</span>}</td>
+                    <td className="text-secondary" data-label="Cible">{log.cible_type ? `${log.cible_type} · ${log.cible_id?.slice(0, 8)}…` : '—'}</td>
+                    <td className="text-secondary" style={{ maxWidth: 320 }} data-label="Détails">{formatDetails(log.détails)}</td>
+                    <td className="text-secondary" data-label="Date">{formatDate(log.date_heure)}</td>
                   </tr>
                 ))}
               </tbody>

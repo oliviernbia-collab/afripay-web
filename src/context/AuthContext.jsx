@@ -1,25 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api, onUnauthorized } from '../api/client';
+import { api, onUnauthorized, refreshAccessToken, setAccessToken } from '../api/client';
 
 const AuthContext = createContext(null);
 
-function readStoredAdmin() {
-  try {
-    const raw = localStorage.getItem('admin');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }) {
-  const [admin, setAdmin] = useState(() => readStoredAdmin());
+  const [admin, setAdmin] = useState(null);
   const [ready, setReady] = useState(false);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('admin');
+    // Best-effort : même si l'appel échoue (réseau coupé...), on efface la session côté client —
+    // le cookie httpOnly expirera de toute façon à son terme.
+    api.post('/admin/logout', undefined, { auth: false }).catch(() => {});
+    setAccessToken(null);
     setAdmin(null);
   }, []);
 
@@ -27,31 +19,22 @@ export function AuthProvider({ children }) {
     onUnauthorized(() => setAdmin(null));
   }, []);
 
-  // Au chargement, si un token existe, on vérifie qu'il est toujours valide.
+  // Au chargement, aucun token n'est plus persisté côté client (voir api/client.js) : on tente un
+  // rafraîchissement silencieux à partir du cookie httpOnly (s'il existe et est encore valide)
+  // pour retrouver une session sans repasser par l'écran de connexion à chaque rechargement.
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setReady(true);
-      return;
-    }
-    api
-      .get('/admin/me')
-      .then((data) => {
-        setAdmin(data);
-        localStorage.setItem('admin', JSON.stringify(data));
+    refreshAccessToken()
+      .then((refreshed) => {
+        if (!refreshed) return null;
+        return api.get('/admin/me').then(setAdmin);
       })
-      .catch(() => {
-        logout();
-      })
+      .catch(() => setAdmin(null))
       .finally(() => setReady(true));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = useCallback(async (email, motDePasse) => {
     const data = await api.post('/admin/login', { email, motDePasse }, { auth: false });
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    localStorage.setItem('admin', JSON.stringify(data.admin));
+    setAccessToken(data.accessToken);
     setAdmin(data.admin);
     return data.admin;
   }, []);
@@ -60,7 +43,6 @@ export function AuthProvider({ children }) {
   // un changement de nom/email, sans attendre une prochaine connexion.
   const updateAdmin = useCallback((next) => {
     setAdmin(next);
-    localStorage.setItem('admin', JSON.stringify(next));
   }, []);
 
   const value = useMemo(

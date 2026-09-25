@@ -156,7 +156,7 @@ export default function Utilisateurs() {
 
       {!loading && list.length > 0 && (
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table data-table-stack">
             <thead>
               <tr>
                 <th>Nom</th>
@@ -169,11 +169,11 @@ export default function Utilisateurs() {
             <tbody>
               {list.map((u) => (
                 <tr key={u.id} className="clickable" onClick={() => navigate(`/clients/${u.id}`)}>
-                  <td>{u.prenom} {u.nom}</td>
-                  <td>{u.telephone}</td>
-                  <td>{u.email || <span className="text-muted">—</span>}</td>
-                  <td><StatusBadge status={u.statut_kyc} /></td>
-                  <td className="text-secondary">{formatDate(u.date_creation)}</td>
+                  <td data-label="Nom">{u.prenom} {u.nom}</td>
+                  <td data-label="Téléphone">{u.telephone}</td>
+                  <td data-label="Email">{u.email || <span className="text-muted">—</span>}</td>
+                  <td data-label="Statut KYC"><StatusBadge status={u.statut_kyc} /></td>
+                  <td className="text-secondary" data-label="Inscrit le">{formatDate(u.date_creation)}</td>
                 </tr>
               ))}
             </tbody>

@@ -353,7 +353,7 @@ export default function Profil() {
         )}
         {!loadingActivity && activity.length > 0 && (
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table data-table-stack">
               <thead>
                 <tr>
                   <th>Action</th>
@@ -364,9 +364,9 @@ export default function Profil() {
               <tbody>
                 {activity.map((log) => (
                   <tr key={log.id}>
-                    <td><span className="badge badge-blue">{ACTION_LABELS[log.action] || log.action}</span></td>
-                    <td className="text-secondary">{formatDetails(log.détails) || '—'}</td>
-                    <td className="text-secondary">{formatDate(log.date_heure)}</td>
+                    <td data-label="Action"><span className="badge badge-blue">{ACTION_LABELS[log.action] || log.action}</span></td>
+                    <td className="text-secondary" data-label="Détails">{formatDetails(log.détails) || '—'}</td>
+                    <td className="text-secondary" data-label="Date">{formatDate(log.date_heure)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -155,7 +155,7 @@ export default function Marchands() {
 
       {!loading && list.length > 0 && (
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table data-table-stack">
             <thead>
               <tr>
                 <th>Marchand</th>
@@ -168,11 +168,11 @@ export default function Marchands() {
             <tbody>
               {list.map((m) => (
                 <tr key={m.id} className="clickable" onClick={() => navigate(`/marchands/${m.id}`)}>
-                  <td>{m.raison_sociale || <span className="text-muted">Particulier</span>}</td>
-                  <td className="text-secondary">{m.type === 'entreprise' ? 'Entreprise' : 'Particulier'}</td>
-                  <td>{m.telephone}</td>
-                  <td><StatusBadge status={m.statut_kyb} /></td>
-                  <td className="text-secondary">{formatDate(m.date_creation)}</td>
+                  <td data-label="Marchand">{m.raison_sociale || <span className="text-muted">Particulier</span>}</td>
+                  <td className="text-secondary" data-label="Type">{m.type === 'entreprise' ? 'Entreprise' : 'Particulier'}</td>
+                  <td data-label="Téléphone">{m.telephone}</td>
+                  <td data-label="Statut KYB"><StatusBadge status={m.statut_kyb} /></td>
+                  <td className="text-secondary" data-label="Inscrit le">{formatDate(m.date_creation)}</td>
                 </tr>
               ))}
             </tbody>

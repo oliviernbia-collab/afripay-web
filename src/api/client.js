@@ -9,18 +9,21 @@
 export const API_HOST = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 export const API_BASE = `${API_HOST}/api`;
 
-function getAccessToken() {
-  return localStorage.getItem('accessToken');
+// L'accessToken ne vit qu'en mémoire (jamais dans localStorage/sessionStorage) : une XSS ne peut
+// alors plus le voler en lisant simplement le storage — c'était le principal risque identifié lors
+// de l'audit de sécurité. Il est perdu au rechargement de la page, ce qui est voulu : c'est le
+// refreshToken (cookie httpOnly posé par le backend, voir POST /admin/login et /admin/refresh)
+// qui permet d'en obtenir un nouveau silencieusement, sans jamais transiter par du JS.
+let accessToken = null;
+export function setAccessToken(token) {
+  accessToken = token || null;
 }
-
-function getRefreshToken() {
-  return localStorage.getItem('refreshToken');
+function getAccessToken() {
+  return accessToken;
 }
 
 function clearSession() {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('admin');
+  accessToken = null;
 }
 
 // Permet à l'UI (AuthContext) de réagir à une session expirée (401)
@@ -32,24 +35,19 @@ export function onUnauthorized(handler) {
 
 // Un seul rafraîchissement en vol à la fois : si plusieurs requêtes essuient un 401 en même
 // temps, elles partagent la même promesse au lieu de déclencher chacune leur propre appel à
-// /auth/refresh (qui ferait tourner le refreshToken plusieurs fois pour rien).
+// /admin/refresh (qui ferait tourner le refreshToken plusieurs fois pour rien).
 let refreshPromise = null;
 
-async function refreshAccessToken() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
-
+export async function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${API_BASE}/auth/refresh`, {
+    refreshPromise = fetch(`${API_BASE}/admin/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include', // envoie le cookie httpOnly afripay_admin_rt
     })
       .then(async (res) => {
         const payload = await res.json().catch(() => null);
         if (!res.ok || !payload?.success) return false;
-        localStorage.setItem('accessToken', payload.data.accessToken);
-        localStorage.setItem('refreshToken', payload.data.refreshToken);
+        setAccessToken(payload.data.accessToken);
         return true;
       })
       .catch(() => false)
@@ -65,6 +63,7 @@ async function doFetch(path, { method, headers, body, isForm }) {
     method,
     headers,
     body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
+    credentials: 'include',
   });
 }
 
@@ -87,9 +86,9 @@ async function request(path, { method = 'GET', body, isForm = false, auth = true
 
   // Access token expiré (15 min) : on tente un rafraîchissement silencieux une seule fois avant
   // de considérer la session comme terminée — sans ça, l'admin était déconnecté toutes les 15
-  // minutes d'usage actif alors qu'un refreshToken valide (30 jours) était déjà stocké mais
-  // jamais utilisé.
-  if (response.status === 401 && auth && !_retried && path !== '/auth/refresh') {
+  // minutes d'usage actif alors qu'un refreshToken valide (30 jours, cookie httpOnly) était déjà
+  // disponible mais jamais utilisé.
+  if (response.status === 401 && auth && !_retried && path !== '/admin/refresh') {
     const refreshed = await refreshAccessToken();
     if (refreshed) {
       return request(path, { method, body, isForm, auth, _retried: true });

@@ -81,7 +81,7 @@ export default function Fraude() {
               {data.usersSuspendus.length === 0 && <p className="text-secondary">Aucun compte client suspendu.</p>}
               {data.usersSuspendus.length > 0 && (
                 <div className="table-wrap">
-                  <table className="data-table">
+                  <table className="data-table data-table-stack">
                     <thead>
                       <tr>
                         <th>Client</th>
@@ -93,10 +93,10 @@ export default function Fraude() {
                     <tbody>
                       {data.usersSuspendus.map((u) => (
                         <tr key={u.id}>
-                          <td><Link to={`/clients/${u.id}`}>{u.prenom} {u.nom}</Link></td>
-                          <td className="text-secondary">{u.telephone}</td>
-                          <td className="text-secondary">{formatDate(u.date_maj)}</td>
-                          <td>
+                          <td data-label="Client"><Link to={`/clients/${u.id}`}>{u.prenom} {u.nom}</Link></td>
+                          <td className="text-secondary" data-label="Téléphone">{u.telephone}</td>
+                          <td className="text-secondary" data-label="Suspendu le">{formatDate(u.date_maj)}</td>
+                          <td data-label="Action">
                             <button
                               type="button"
                               className="btn btn-success btn-sm"
@@ -119,7 +119,7 @@ export default function Fraude() {
               {data.merchantsSuspendus.length === 0 && <p className="text-secondary">Aucun compte marchand suspendu.</p>}
               {data.merchantsSuspendus.length > 0 && (
                 <div className="table-wrap">
-                  <table className="data-table">
+                  <table className="data-table data-table-stack">
                     <thead>
                       <tr>
                         <th>Marchand</th>
@@ -131,10 +131,10 @@ export default function Fraude() {
                     <tbody>
                       {data.merchantsSuspendus.map((m) => (
                         <tr key={m.id}>
-                          <td><Link to={`/marchands/${m.id}`}>{m.raison_sociale || 'Particulier'}</Link></td>
-                          <td className="text-secondary">{m.telephone}</td>
-                          <td className="text-secondary">{formatDate(m.date_maj)}</td>
-                          <td>
+                          <td data-label="Marchand"><Link to={`/marchands/${m.id}`}>{m.raison_sociale || 'Particulier'}</Link></td>
+                          <td className="text-secondary" data-label="Téléphone">{m.telephone}</td>
+                          <td className="text-secondary" data-label="Suspendu le">{formatDate(m.date_maj)}</td>
+                          <td data-label="Action">
                             <button
                               type="button"
                               className="btn btn-success btn-sm"
@@ -158,7 +158,7 @@ export default function Fraude() {
             {data.echecsRepetes.length === 0 && <p className="text-secondary">Aucune adresse suspecte détectée.</p>}
             {data.echecsRepetes.length > 0 && (
               <div className="table-wrap">
-                <table className="data-table">
+                <table className="data-table data-table-stack">
                   <thead>
                     <tr>
                       <th>Adresse IP</th>
@@ -169,9 +169,9 @@ export default function Fraude() {
                   <tbody>
                     {data.echecsRepetes.map((row) => (
                       <tr key={row.adresse_ip}>
-                        <td style={{ fontFamily: 'monospace' }}>{row.adresse_ip}</td>
-                        <td>{row.tentatives}</td>
-                        <td className="text-secondary">{formatDate(row.derniere_tentative)}</td>
+                        <td style={{ fontFamily: 'monospace' }} data-label="Adresse IP">{row.adresse_ip}</td>
+                        <td data-label="Tentatives échouées">{row.tentatives}</td>
+                        <td className="text-secondary" data-label="Dernière tentative">{formatDate(row.derniere_tentative)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -185,7 +185,7 @@ export default function Fraude() {
             {data.transactionsEchouees.length === 0 && <p className="text-secondary">Aucune transaction échouée récente.</p>}
             {data.transactionsEchouees.length > 0 && (
               <div className="table-wrap">
-                <table className="data-table">
+                <table className="data-table data-table-stack">
                   <thead>
                     <tr>
                       <th>Référence</th>
@@ -197,10 +197,10 @@ export default function Fraude() {
                   <tbody>
                     {data.transactionsEchouees.map((tx) => (
                       <tr key={tx.id}>
-                        <td>{tx.reference}</td>
-                        <td>{tx.type}</td>
-                        <td>{formatFcfa(tx.montant)}</td>
-                        <td className="text-secondary">{formatDate(tx.date_heure)}</td>
+                        <td data-label="Référence">{tx.reference}</td>
+                        <td data-label="Type">{tx.type}</td>
+                        <td data-label="Montant">{formatFcfa(tx.montant)}</td>
+                        <td className="text-secondary" data-label="Date">{formatDate(tx.date_heure)}</td>
                       </tr>
                     ))}
                   </tbody>

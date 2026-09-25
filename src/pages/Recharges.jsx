@@ -142,7 +142,7 @@ export default function Recharges() {
       {!loading && list.length > 0 && (
         <>
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table data-table-stack">
               <thead>
                 <tr>
                   <th>Client</th>
@@ -156,12 +156,12 @@ export default function Recharges() {
               <tbody>
                 {list.map((r) => (
                   <tr key={r.id}>
-                    <td>{r.prenom} {r.nom}<div className="text-muted" style={{ fontSize: '0.76rem' }}>{r.telephone}</div></td>
-                    <td>{PROVIDERS.find((p) => p.value === r.fournisseur)?.label || r.fournisseur}</td>
-                    <td className="text-secondary">{r.référence_externe}</td>
-                    <td style={{ fontWeight: 600 }}>{formatFcfa(r.montant)}</td>
-                    <td><StatusBadge status={r.statut} /></td>
-                    <td className="text-secondary">{formatDate(r.date_creation)}</td>
+                    <td data-label="Client">{r.prenom} {r.nom}<div className="text-muted" style={{ fontSize: '0.76rem' }}>{r.telephone}</div></td>
+                    <td data-label="Fournisseur">{PROVIDERS.find((p) => p.value === r.fournisseur)?.label || r.fournisseur}</td>
+                    <td className="text-secondary" data-label="Référence externe">{r.référence_externe}</td>
+                    <td style={{ fontWeight: 600 }} data-label="Montant">{formatFcfa(r.montant)}</td>
+                    <td data-label="Statut"><StatusBadge status={r.statut} /></td>
+                    <td className="text-secondary" data-label="Date">{formatDate(r.date_creation)}</td>
                   </tr>
                 ))}
               </tbody>
