@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
@@ -16,6 +17,7 @@ import Recharges from './pages/Recharges';
 import Biometrie from './pages/Biometrie';
 import Fraude from './pages/Fraude';
 import Notifications from './pages/Notifications';
+import Messages from './pages/Messages';
 import Internes from './pages/Internes';
 import AuditLogs from './pages/AuditLogs';
 import Profil from './pages/Profil';
@@ -25,6 +27,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route
             element={
@@ -53,6 +56,7 @@ export default function App() {
               }
             />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/messages" element={<Messages />} />
             <Route
               path="/internes"
               element={
@@ -71,8 +75,7 @@ export default function App() {
             />
             <Route path="/profil" element={<Profil />} />
           </Route>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -29,7 +29,8 @@ function SendForm({ onSent }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const destinataireLabel = typeDestinataire === 'client' ? 'clients' : 'marchands';
+  const destinataireLabel =
+    typeDestinataire === 'client' ? 'clients' : typeDestinataire === 'marchand' ? 'marchands' : 'clients et marchands';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -53,7 +54,9 @@ function SendForm({ onSent }) {
           contenu,
           tous: true,
         });
-        setSuccess(`Notification envoyée à ${nombreDestinataires} ${destinataireLabel}.`);
+        setSuccess(
+          `Notification envoyée à ${nombreDestinataires} ${destinataireLabel}. Bandeau de la page d'accueil mis à jour.`
+        );
       } else {
         // Résout le téléphone en identifiant via les listes Clients/Marchands déjà exposées.
         const searchPath =
@@ -93,13 +96,17 @@ function SendForm({ onSent }) {
       <Banner type="success" message={success} onClose={() => setSuccess('')} />
       <form onSubmit={handleSubmit} className="stack gap-12">
         <div className="tabs">
-          <button type="button" className={`tab${cible === 'un' ? ' active' : ''}`} onClick={() => setCible('un')}>
+          <button
+            type="button"
+            className={`tab${cible === 'un' ? ' active' : ''}`}
+            onClick={() => { setCible('un'); setTypeDestinataire('client'); }}
+          >
             Un destinataire
           </button>
           <button
             type="button"
             className={`tab${cible === 'tous' ? ' active' : ''}`}
-            onClick={() => setCible('tous')}
+            onClick={() => { setCible('tous'); setTypeDestinataire('client'); }}
           >
             Tous les clients ou marchands
           </button>
@@ -110,6 +117,7 @@ function SendForm({ onSent }) {
             <select className="input" value={typeDestinataire} onChange={(e) => setTypeDestinataire(e.target.value)}>
               <option value="client">{cible === 'tous' ? 'Tous les clients' : 'Client'}</option>
               <option value="marchand">{cible === 'tous' ? 'Tous les marchands' : 'Marchand'}</option>
+              {cible === 'tous' && <option value="tous">Tous les clients et marchands</option>}
             </select>
           </div>
           {cible === 'un' && (
@@ -135,7 +143,8 @@ function SendForm({ onSent }) {
         </div>
         {cible === 'tous' && (
           <p className="text-secondary" style={{ margin: 0, fontSize: '0.82rem' }}>
-            Cette notification sera envoyée en une seule fois à tous les {destinataireLabel} enregistrés.
+            Cette notification sera envoyée en une seule fois à tous les {destinataireLabel} enregistrés,
+            et remplacera aussi le bandeau affiché sur la page d'accueil publique du site.
           </p>
         )}
         <div className="field">
@@ -163,6 +172,53 @@ function SendForm({ onSent }) {
   );
 }
 
+// Seul moyen de faire cesser l'affichage du bandeau de la page d'accueil sans attendre/déclencher
+// une nouvelle diffusion générale — voir annonceController.stop. `annonce` (la bannière
+// actuellement active, ou null) est contrôlée par le composant parent pour rester synchronisée
+// avec SendForm (une diffusion "tous" la remplace aussi).
+function BandeauStatus({ annonce, onStopped }) {
+  const [stopping, setStopping] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleStop() {
+    setStopping(true);
+    setError('');
+    try {
+      await api.post('/admin/annonces/arreter');
+      onStopped?.();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setStopping(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 24 }}>
+      <div className="row gap-12 wrap" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ margin: '0 0 4px' }}>Bandeau de la page d'accueil</h3>
+          {annonce ? (
+            <p className="text-secondary" style={{ margin: 0, fontSize: '0.86rem' }}>
+              Actuellement affiché : « {annonce.message} »
+            </p>
+          ) : (
+            <p className="text-muted" style={{ margin: 0, fontSize: '0.86rem' }}>
+              Aucun bandeau actif actuellement.
+            </p>
+          )}
+        </div>
+        {annonce && (
+          <button type="button" className="btn btn-danger btn-sm" onClick={handleStop} disabled={stopping}>
+            {stopping ? 'Arrêt…' : 'Arrêter le bandeau'}
+          </button>
+        )}
+      </div>
+      <Banner type="error" message={error} onClose={() => setError('')} />
+    </div>
+  );
+}
+
 export default function Notifications() {
   const [type, setType] = useState('');
   const [typeDestinataire, setTypeDestinataire] = useState('');
@@ -174,6 +230,20 @@ export default function Notifications() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [bandeau, setBandeau] = useState(null);
+
+  const loadBandeau = useCallback(() => {
+    // Endpoint public (pas d'auth nécessaire) : c'est le même que celui consommé par la page
+    // d'accueil, pas besoin d'un endpoint admin dédié juste pour afficher ce statut.
+    return api
+      .get('/annonces/active', { auth: false })
+      .then((data) => setBandeau(data[0] || null))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    loadBandeau();
+  }, [loadBandeau]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -227,7 +297,9 @@ export default function Notifications() {
         </div>
       </div>
 
-      <SendForm onSent={load} />
+      <SendForm onSent={() => { load(); loadBandeau(); }} />
+
+      <BandeauStatus annonce={bandeau} onStopped={loadBandeau} />
 
       <Banner type="error" message={error} onClose={() => setError('')} />
 

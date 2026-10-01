@@ -5,6 +5,7 @@ import { fileUrl } from '../api/client';
 import logo from '../assets/logo.png';
 import Icon from './Icon';
 import {
+  faHouse,
   faGauge,
   faUsers,
   faStore,
@@ -16,6 +17,7 @@ import {
   faFingerprint,
   faTriangleExclamation,
   faBell,
+  faEnvelope,
   faUserShield,
   faClipboardList,
   faRightFromBracket,
@@ -24,6 +26,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const NAV_ITEMS = [
+  { to: '/', label: 'Accueil', color: 'var(--text-secondary)', icon: faHouse, end: true },
   { to: '/dashboard', label: 'Dashboard', color: 'var(--turquoise)', icon: faGauge },
   { to: '/clients', label: 'Clients', color: 'var(--blue)', icon: faUsers },
   { to: '/marchands', label: 'Marchands', color: 'var(--violet)', icon: faStore },
@@ -35,6 +38,7 @@ const NAV_ITEMS = [
   { to: '/biometrie', label: 'Biométrie', color: 'var(--blue)', icon: faFingerprint },
   { to: '/fraude', label: 'Fraude', color: 'var(--red)', icon: faTriangleExclamation, roles: ['super_admin', 'conformite'] },
   { to: '/notifications', label: 'Notifications', color: 'var(--gold)', icon: faBell },
+  { to: '/messages', label: 'Messages', color: 'var(--blue)', icon: faEnvelope },
   { to: '/internes', label: 'Utilisateurs internes', color: 'var(--violet)', icon: faUserShield, roles: ['super_admin'] },
   { to: '/audit-logs', label: 'Audit Logs', color: 'var(--text-secondary)', icon: faClipboardList, roles: ['super_admin', 'conformite'] },
 ];
@@ -89,6 +93,7 @@ export default function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.end}
               className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
             >
               <span className="sidebar-link-icon" style={{ color: item.color }}>

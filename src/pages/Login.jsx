@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,10 @@ export default function Login() {
   const [motDePasse, setMotDePasse] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = 'AfriPay — Back-office Admin';
+  }, []);
 
   if (ready && isAuthenticated) {
     const from = location.state?.from?.pathname || '/dashboard';
