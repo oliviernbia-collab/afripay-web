@@ -162,6 +162,65 @@
 .lp-nav-login-admin:hover {
   background: rgba(227, 6, 19, 0.12);
 }
+.lp-lang-switcher {
+  position: relative;
+}
+.lp-lang-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.lp-lang-current:hover {
+  background: var(--card-alt);
+  color: var(--text);
+}
+.lp-lang-flag {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.lp-lang-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  z-index: 40;
+}
+.lp-lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: none;
+  color: var(--text);
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+}
+.lp-lang-option:hover {
+  background: var(--card-alt);
+}
+.lp-lang-option.active {
+  font-weight: 600;
+  background: var(--card-alt);
+}
 .lp-menu-toggle {
   display: none;
   align-items: center;
@@ -942,6 +1001,16 @@
   .lp-nav-login {
     margin-top: 10px;
     text-align: center;
+  }
+  .lp-lang-switcher {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+  }
+  .lp-lang-options {
+    left: 0;
+    right: 0;
+    margin: 0 auto;
   }
   .lp-menu-toggle {
     display: inline-flex;

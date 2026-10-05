@@ -10,6 +10,7 @@ import DocImage from '../components/DocImage';
 import { formatDate } from '../utils/format';
 
 const KYB_DECISION_ROLES = ['super_admin', 'conformite'];
+const UNBLOCK_ROLES = ['super_admin', 'conformite'];
 
 const DOC_LABELS = {
   cni: "Carte nationale d'identité",
@@ -26,6 +27,7 @@ export default function MarchandDetail() {
   const { id } = useParams();
   const { admin } = useAuth();
   const canDecide = KYB_DECISION_ROLES.includes(admin?.role);
+  const canUnblock = UNBLOCK_ROLES.includes(admin?.role);
   const [merchant, setMerchant] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState('');
@@ -49,6 +51,43 @@ export default function MarchandDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function handleBlock() {
+    const motif = window.prompt('Motif du blocage (ex. perte/vol signalé par le marchand) :');
+    if (motif === null) return;
+    if (!motif.trim()) {
+      setError('Un motif est requis pour bloquer ce compte.');
+      return;
+    }
+    setActionLoading('bloquer');
+    setError('');
+    setSuccess('');
+    try {
+      await api.post(`/admin/marchands/${id}/bloquer`, { motif });
+      setSuccess('Compte bloqué : connexion, transferts et paiements désactivés, appareils déconnectés.');
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading('');
+    }
+  }
+
+  async function handleUnblock() {
+    if (!window.confirm("Débloquer ce compte ? Assurez-vous d'avoir revérifié l'identité du titulaire.")) return;
+    setActionLoading('debloquer');
+    setError('');
+    setSuccess('');
+    try {
+      await api.post(`/admin/marchands/${id}/debloquer`);
+      setSuccess('Compte débloqué.');
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading('');
+    }
+  }
 
   async function handleDecision(decision) {
     let motif;
@@ -89,7 +128,12 @@ export default function MarchandDetail() {
             {merchant ? merchant.raison_sociale || `${merchant.type === 'entreprise' ? 'Entreprise' : 'Marchand particulier'}` : 'Détail marchand'}
           </h1>
         </div>
-        {merchant && <StatusBadge status={merchant.statut_kyb} />}
+        {merchant && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {!!merchant.compte_bloque && <span className="badge badge-red">Compte bloqué</span>}
+            <StatusBadge status={merchant.statut_kyb} />
+          </div>
+        )}
       </div>
 
       <Banner type="error" message={error} onClose={() => setError('')} />
@@ -175,6 +219,48 @@ export default function MarchandDetail() {
               <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
                 Les décisions KYB sont réservées aux rôles Conformité et Super admin.
               </p>
+            )}
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Sécurité du compte</h3>
+            {merchant.compte_bloque ? (
+              <>
+                <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
+                  Motif du blocage : {merchant.motif_blocage || '—'}
+                  {merchant.date_blocage ? ` (le ${formatDate(merchant.date_blocage)})` : ''}
+                </p>
+                {canUnblock ? (
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    disabled={!!actionLoading}
+                    onClick={handleUnblock}
+                  >
+                    {actionLoading === 'debloquer' ? 'Déblocage…' : 'Débloquer le compte'}
+                  </button>
+                ) : (
+                  <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
+                    Le déblocage est réservé aux rôles Conformité et Super admin.
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
+                  En cas de perte ou de vol du téléphone signalé par le marchand : bloque
+                  immédiatement la connexion, les transferts/paiements et déconnecte tous les
+                  appareils actifs.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={!!actionLoading}
+                  onClick={handleBlock}
+                >
+                  {actionLoading === 'bloquer' ? 'Blocage…' : 'Bloquer le compte (perte / vol)'}
+                </button>
+              </>
             )}
           </div>
 
