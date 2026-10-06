@@ -20,6 +20,7 @@ import {
   faEnvelope,
   faUserShield,
   faClipboardList,
+  faKey,
   faRightFromBracket,
   faBars,
   faXmark,
@@ -36,12 +37,22 @@ const NAV_ITEMS = [
   { to: '/wallets', label: 'Wallets', color: 'var(--turquoise)', icon: faWallet },
   { to: '/recharges', label: 'Recharges', color: 'var(--orange)', icon: faCreditCard },
   { to: '/biometrie', label: 'Biométrie', color: 'var(--blue)', icon: faFingerprint },
-  { to: '/fraude', label: 'Fraude', color: 'var(--red)', icon: faTriangleExclamation, roles: ['super_admin', 'conformite'] },
+  { to: '/fraude', label: 'Fraude', color: 'var(--red)', icon: faTriangleExclamation, permission: 'fraude.voir' },
   { to: '/notifications', label: 'Notifications', color: 'var(--gold)', icon: faBell },
   { to: '/messages', label: 'Messages', color: 'var(--blue)', icon: faEnvelope },
-  { to: '/internes', label: 'Utilisateurs internes', color: 'var(--violet)', icon: faUserShield, roles: ['super_admin'] },
-  { to: '/audit-logs', label: 'Audit Logs', color: 'var(--text-secondary)', icon: faClipboardList, roles: ['super_admin', 'conformite'] },
+  { to: '/internes', label: 'Utilisateurs internes', color: 'var(--violet)', icon: faUserShield, permission: 'internes.gerer' },
+  { to: '/permissions', label: 'Permissions', color: 'var(--violet)', icon: faKey, roles: ['super_admin'] },
+  { to: '/audit-logs', label: 'Audit Logs', color: 'var(--text-secondary)', icon: faClipboardList, permission: 'audit.voir' },
 ];
+
+// Même logique que ProtectedRoute (web/src/components/ProtectedRoute.jsx) : `roles` reste un
+// garde-fou en dur (ex. /permissions), `permission` dépend de la matrice configurable renvoyée
+// par /admin/login et /admin/me (admin.permissions).
+function canSeeNavItem(item, admin) {
+  if (item.roles) return item.roles.includes(admin?.role);
+  if (item.permission) return Boolean(admin?.permissions?.includes(item.permission));
+  return true;
+}
 
 export default function Layout() {
   const { admin, logout } = useAuth();
@@ -68,7 +79,7 @@ export default function Layout() {
         .toUpperCase()
     : 'AD';
 
-  const visibleNavItems = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(admin?.role));
+  const visibleNavItems = NAV_ITEMS.filter((item) => canSeeNavItem(item, admin));
 
   return (
     <div className="app-shell">

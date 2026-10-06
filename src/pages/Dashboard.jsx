@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   faTriangleExclamation,
@@ -9,6 +9,7 @@ import {
   faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import StatCard from '../components/StatCard';
 import DonutChart from '../components/DonutChart';
 import BarCompareChart from '../components/BarCompareChart';
@@ -22,7 +23,7 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     api
@@ -40,6 +41,24 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => load(), [load]);
+
+  // Temps réel (voir backend/src/realtime/socket.js) : les compteurs "dossiers en attente" et les
+  // statistiques d'activité se mettent à jour dès qu'un document KYC/KYB, un message de contact ou
+  // une transaction (recharge, transfert, paiement) arrive côté mobile, sans recharger la page.
+  useEffect(() => {
+    socket.on('admin:kyc_submitted', load);
+    socket.on('admin:contact_new', load);
+    socket.on('admin:transaction_new', load);
+    socket.on('admin:transaction_updated', load);
+    return () => {
+      socket.off('admin:kyc_submitted', load);
+      socket.off('admin:contact_new', load);
+      socket.off('admin:transaction_new', load);
+      socket.off('admin:transaction_updated', load);
+    };
+  }, [load]);
 
   const kycEnAttente = data?.dossiersEnAttente?.kyc || 0;
   const kybEnAttente = data?.dossiersEnAttente?.kyb || 0;

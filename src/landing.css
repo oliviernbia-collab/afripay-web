@@ -433,6 +433,28 @@
   }
 }
 
+/* ---------- Révélation au défilement (voir components/Reveal.jsx) ---------- */
+.lp-reveal {
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.16, 0.84, 0.44, 1), transform 0.7s cubic-bezier(0.16, 0.84, 0.44, 1);
+  will-change: opacity, transform;
+}
+.lp-reveal-up { transform: translateY(32px); }
+.lp-reveal-left { transform: translateX(-40px); }
+.lp-reveal-right { transform: translateX(40px); }
+.lp-reveal-scale { transform: scale(0.94); }
+.lp-reveal-visible {
+  opacity: 1;
+  transform: translate(0, 0) scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ---------- Bandeau confiance ---------- */
 .lp-trust {
   border-top: 1px solid var(--border);

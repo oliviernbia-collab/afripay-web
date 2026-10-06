@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import Banner from '../components/Banner';
 import StatusBadge, { methodLabel, typeLabel } from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -52,7 +53,7 @@ export default function Transactions() {
     return params.toString();
   }
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -75,6 +76,21 @@ export default function Transactions() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, statut, typeCompte, dateDebut, dateFin]);
+
+  useEffect(() => load(), [load]);
+
+  // Temps réel (voir backend/src/services/transactionService.js) : une transaction créée ou dont le
+  // statut change côté mobile (recharge, transfert, retrait, encaissement) apparaît ici sans
+  // recharger la page. On reprend juste la page 0 avec les filtres actifs — plus simple et plus sûr
+  // que d'essayer de fusionner un seul événement dans une liste déjà paginée.
+  useEffect(() => {
+    socket.on('admin:transaction_new', load);
+    socket.on('admin:transaction_updated', load);
+    return () => {
+      socket.off('admin:transaction_new', load);
+      socket.off('admin:transaction_updated', load);
+    };
+  }, [load]);
 
   async function loadMore() {
     setLoadingMore(true);

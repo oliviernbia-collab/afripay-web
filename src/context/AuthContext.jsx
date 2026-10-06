@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api, onUnauthorized, refreshAccessToken, setAccessToken } from '../api/client';
+import { connectRealtime, disconnectRealtime } from '../realtime/socket';
 
 const AuthContext = createContext(null);
 
@@ -44,6 +45,14 @@ export function AuthProvider({ children }) {
   const updateAdmin = useCallback((next) => {
     setAdmin(next);
   }, []);
+
+  // Connexion temps réel (voir realtime/socket.js) dérivée d'un seul endroit de l'état `admin`
+  // plutôt que dispatchée à chaque site qui fait setAdmin(...) (login/restauration au
+  // chargement/déconnexion forcée) : un seul effet ne peut pas en oublier un.
+  useEffect(() => {
+    if (admin) connectRealtime();
+    else disconnectRealtime();
+  }, [admin]);
 
   const value = useMemo(
     () => ({ admin, isAuthenticated: !!admin, ready, login, logout, updateAdmin }),

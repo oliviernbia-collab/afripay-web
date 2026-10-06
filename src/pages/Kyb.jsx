@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -34,7 +35,7 @@ export default function Kyb() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -57,6 +58,21 @@ export default function Kyb() {
       cancelled = true;
     };
   }, [statut, dateDebut, dateFin]);
+
+  useEffect(() => load(), [load]);
+
+  // Temps réel (voir backend/src/services/kycService.js) : un nouveau document KYB soumis
+  // apparaît sans recharger la page — seulement si le filtre actif peut l'inclure (un nouveau
+  // document est toujours "en_attente" et daté d'aujourd'hui).
+  useEffect(() => {
+    const onNew = () => {
+      const matchesStatut = statut === '' || statut === 'en_attente';
+      const matchesDate = !dateFin || dateFin >= new Date().toISOString().slice(0, 10);
+      if (matchesStatut && matchesDate) load();
+    };
+    socket.on('admin:kyc_submitted', onNew);
+    return () => socket.off('admin:kyc_submitted', onNew);
+  }, [load, statut, dateFin]);
 
   return (
     <div className="page">

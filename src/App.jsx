@@ -19,6 +19,7 @@ import Fraude from './pages/Fraude';
 import Notifications from './pages/Notifications';
 import Messages from './pages/Messages';
 import Internes from './pages/Internes';
+import Permissions from './pages/Permissions';
 import AuditLogs from './pages/AuditLogs';
 import Profil from './pages/Profil';
 
@@ -50,7 +51,7 @@ export default function App() {
             <Route
               path="/fraude"
               element={
-                <ProtectedRoute roles={['super_admin', 'conformite']}>
+                <ProtectedRoute permission="fraude.voir">
                   <Fraude />
                 </ProtectedRoute>
               }
@@ -60,15 +61,23 @@ export default function App() {
             <Route
               path="/internes"
               element={
-                <ProtectedRoute roles={['super_admin']}>
+                <ProtectedRoute permission="internes.gerer">
                   <Internes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/permissions"
+              element={
+                <ProtectedRoute roles={['super_admin']}>
+                  <Permissions />
                 </ProtectedRoute>
               }
             />
             <Route
               path="/audit-logs"
               element={
-                <ProtectedRoute roles={['super_admin', 'conformite']}>
+                <ProtectedRoute permission="audit.voir">
                   <AuditLogs />
                 </ProtectedRoute>
               }

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { faUsers, faStore } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import Banner from '../components/Banner';
 import StatCard from '../components/StatCard';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -44,7 +45,7 @@ export default function Wallets() {
     return params.toString();
   }
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -68,6 +69,15 @@ export default function Wallets() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, search, dateDebut, dateFin]);
+
+  useEffect(() => load(), [load]);
+
+  // Temps réel (voir backend/src/services/walletService.js) : un solde qui change côté mobile
+  // (recharge, transfert, paiement, retrait) se reflète ici sans recharger la page.
+  useEffect(() => {
+    socket.on('admin:wallet_updated', load);
+    return () => socket.off('admin:wallet_updated', load);
+  }, [load]);
 
   async function loadMore() {
     setLoadingMore(true);

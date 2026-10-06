@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -40,7 +41,7 @@ export default function Marchands() {
 
   const search = searchParams.get('search') || '';
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     const params = new URLSearchParams();
@@ -63,6 +64,19 @@ export default function Marchands() {
       cancelled = true;
     };
   }, [statutKyb, search, dateDebut, dateFin]);
+
+  useEffect(() => load(), [load]);
+
+  // Temps réel (voir backend/src/controllers/authController.js) : un nouveau marchand inscrit
+  // apparaît ici sans recharger la page — seulement si le filtre actif peut l'inclure (un nouveau
+  // compte est toujours "en_attente" de KYB).
+  useEffect(() => {
+    const onNew = () => {
+      if (statutKyb === '' || statutKyb === 'en_attente') load();
+    };
+    socket.on('admin:merchant_new', onNew);
+    return () => socket.off('admin:merchant_new', onNew);
+  }, [load, statutKyb]);
 
   function setTab(value) {
     setSearchParams((prev) => {

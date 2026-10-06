@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import Banner from '../components/Banner';
 import StatusBadge from '../components/StatusBadge';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -41,7 +42,7 @@ export default function Utilisateurs() {
 
   const search = searchParams.get('search') || '';
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     const params = new URLSearchParams();
@@ -64,6 +65,19 @@ export default function Utilisateurs() {
       cancelled = true;
     };
   }, [statutKyc, search, dateDebut, dateFin]);
+
+  useEffect(() => load(), [load]);
+
+  // Temps réel (voir backend/src/controllers/authController.js) : un nouveau client inscrit
+  // apparaît ici sans recharger la page — seulement si le filtre actif peut l'inclure (un nouveau
+  // compte est toujours "en_attente" de KYC).
+  useEffect(() => {
+    const onNew = () => {
+      if (statutKyc === '' || statutKyc === 'en_attente') load();
+    };
+    socket.on('admin:client_new', onNew);
+    return () => socket.off('admin:client_new', onNew);
+  }, [load, statutKyc]);
 
   function setTab(value) {
     setSearchParams((prev) => {

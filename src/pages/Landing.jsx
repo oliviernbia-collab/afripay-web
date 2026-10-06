@@ -23,6 +23,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Icon from '../components/Icon';
 import Banner from '../components/Banner';
+import Reveal from '../components/Reveal';
 import { api } from '../api/client';
 import logo from '../assets/logo.png';
 import { LANDING_I18N, LANGUAGES } from '../i18n/landing';
@@ -271,7 +272,7 @@ export default function Landing() {
         <section className="lp-hero">
           <div className="lp-hero-bg" aria-hidden="true" />
           <div className="lp-container lp-hero-inner">
-            <div className="lp-hero-copy">
+            <Reveal as="div" className="lp-hero-copy">
               <span className="lp-eyebrow">{t.hero.eyebrow}</span>
               <h1>
                 {t.hero.titlePart1}<span className="lp-gradient-text">{t.hero.titlePart2}</span>
@@ -301,9 +302,9 @@ export default function Landing() {
                   ))}
                 </div>
               </div>
-            </div>
+            </Reveal>
 
-            <div className="lp-hero-visual">
+            <Reveal as="div" className="lp-hero-visual" variant="scale" delay={150}>
               <div className="lp-phone-mock">
                 <div className="lp-phone-notch" />
                 <div className="lp-phone-screen">
@@ -326,7 +327,7 @@ export default function Landing() {
                 <Icon icon={faBolt} />
                 <span>{t.hero.badgeInstant}</span>
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -334,10 +335,10 @@ export default function Landing() {
         <section className="lp-trust">
           <div className="lp-container lp-trust-inner">
             {t.trust.map((label, i) => (
-              <div className="lp-trust-item" key={label}>
+              <Reveal as="div" className="lp-trust-item" key={label} delay={i * 70}>
                 <Icon icon={TRUST_ICONS[i]} />
                 <span>{label}</span>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
@@ -345,21 +346,21 @@ export default function Landing() {
         {/* ---------- Comment ça marche ---------- */}
         <section id="comment-ca-marche" className="lp-section">
           <div className="lp-container">
-            <div className="lp-section-head">
+            <Reveal as="div" className="lp-section-head">
               <span className="lp-eyebrow">{t.comment.eyebrow}</span>
               <h2>{t.comment.title}</h2>
               <p>{t.comment.subtitle}</p>
-            </div>
+            </Reveal>
             <div className="lp-steps">
               {etapes.map((etape, i) => (
-                <div className="lp-step" key={etape.titre}>
+                <Reveal as="div" className="lp-step" key={etape.titre} delay={i * 110}>
                   <div className="lp-step-number">{String(i + 1).padStart(2, '0')}</div>
                   <div className="lp-step-icon">
                     <Icon icon={etape.icon} />
                   </div>
                   <h3>{etape.titre}</h3>
                   <p>{etape.texte}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -368,20 +369,20 @@ export default function Landing() {
         {/* ---------- Fonctionnalités ---------- */}
         <section id="fonctionnalites" className="lp-section lp-section-alt">
           <div className="lp-container">
-            <div className="lp-section-head">
+            <Reveal as="div" className="lp-section-head">
               <span className="lp-eyebrow">{t.fonctionnalites.eyebrow}</span>
               <h2>{t.fonctionnalites.title}</h2>
               <p>{t.fonctionnalites.subtitle}</p>
-            </div>
+            </Reveal>
             <div className="lp-feature-grid">
-              {fonctionnalites.map((f) => (
-                <div className="lp-feature-card" key={f.titre}>
+              {fonctionnalites.map((f, i) => (
+                <Reveal as="div" className="lp-feature-card" key={f.titre} delay={(i % 3) * 100}>
                   <div className="lp-feature-icon">
                     <Icon icon={f.icon} />
                   </div>
                   <h3>{f.titre}</h3>
                   <p>{f.texte}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -390,14 +391,16 @@ export default function Landing() {
         {/* ---------- Nos applications (Client / Marchand côte à côte) ---------- */}
         <section id="applications" className="lp-section lp-apps">
           <div className="lp-container">
-            <div className="lp-section-head">
+            <Reveal as="div" className="lp-section-head">
               <span className="lp-eyebrow">{t.apps.eyebrow}</span>
               <h2>{t.apps.title}</h2>
               <p>{t.apps.subtitle}</p>
-            </div>
+            </Reveal>
 
             <div className="lp-apps-grid">
-              <div
+              <Reveal
+                as="div"
+                variant="left"
                 id="app-client"
                 className={`lp-app-card lp-app-card-client ${selectedApp === 'client' ? 'lp-app-card-selected' : ''}`}
               >
@@ -426,9 +429,11 @@ export default function Landing() {
                   <Icon icon={faMobileScreenButton} />
                   {t.apps.client.cta}
                 </a>
-              </div>
+              </Reveal>
 
-              <div
+              <Reveal
+                as="div"
+                variant="right"
                 id="marchands"
                 className={`lp-app-card lp-app-card-merchant ${selectedApp === 'marchand' ? 'lp-app-card-selected' : ''}`}
               >
@@ -457,7 +462,7 @@ export default function Landing() {
                   <Icon icon={faStore} />
                   {t.apps.marchand.cta}
                 </a>
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -465,18 +470,18 @@ export default function Landing() {
         {/* ---------- Sécurité ---------- */}
         <section id="securite" className="lp-section lp-section-alt">
           <div className="lp-container">
-            <div className="lp-section-head">
+            <Reveal as="div" className="lp-section-head">
               <span className="lp-eyebrow">{t.securite.eyebrow}</span>
               <h2>{t.securite.title}</h2>
               <p>{t.securite.subtitle}</p>
-            </div>
+            </Reveal>
             <div className="lp-security-grid">
-              {securiteCards.map((card) => (
-                <div className="lp-security-card" key={card.titre}>
+              {securiteCards.map((card, i) => (
+                <Reveal as="div" className="lp-security-card" key={card.titre} delay={(i % 4) * 90}>
                   <Icon icon={card.icon} />
                   <h3>{card.titre}</h3>
                   <p>{card.texte}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -484,7 +489,7 @@ export default function Landing() {
 
         {/* ---------- Téléchargement / CTA ---------- */}
         <section id="telecharger" className="lp-section lp-cta">
-          <div className="lp-container lp-cta-inner">
+          <Reveal as="div" variant="scale" className="lp-container lp-cta-inner">
             <h2>{t.telecharger.title}</h2>
             <p>{t.telecharger.subtitle}</p>
             <div className="lp-cta-buttons">
@@ -492,19 +497,19 @@ export default function Landing() {
               <Link to="/login" className="btn btn-ghost lp-btn-lg" onClick={requestAdminAccess}>{t.telecharger.espaceAdmin}</Link>
             </div>
             <p className="lp-cta-note">{t.telecharger.note}</p>
-          </div>
+          </Reveal>
         </section>
 
         {/* ---------- Contact ---------- */}
         <section id="contact" className="lp-section lp-section-alt">
           <div className="lp-container lp-contact-inner">
-            <div className="lp-section-head">
+            <Reveal as="div" className="lp-section-head">
               <span className="lp-eyebrow">{t.contact.eyebrow}</span>
               <h2>{t.contact.title}</h2>
               <p>{t.contact.subtitle}</p>
-            </div>
+            </Reveal>
 
-            <div className="lp-contact-card">
+            <Reveal as="div" delay={100} className="lp-contact-card">
               {contactSent ? (
                 <div className="lp-contact-success">
                   <Icon icon={faCircleCheck} />
@@ -577,7 +582,7 @@ export default function Landing() {
                   </div>
                 </form>
               )}
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>

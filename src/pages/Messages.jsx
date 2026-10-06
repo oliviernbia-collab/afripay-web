@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { socket } from '../realtime/socket';
 import Banner from '../components/Banner';
 import Icon from '../components/Icon';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -129,6 +130,20 @@ export default function Messages() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Temps réel (voir backend/src/services/contactMessageService.js) : un nouveau message de
+  // contact apparaît dès son envoi, sans recharger la page. On ne recharge QUE si le filtre actif
+  // peut l'inclure (un nouveau message est toujours "non répondu" et toujours daté d'aujourd'hui) —
+  // inutile de rafraîchir une liste filtrée sur "répondus" ou une plage passée.
+  useEffect(() => {
+    const onNew = () => {
+      const matchesRepondu = repondu !== 'true';
+      const matchesDate = !dateFin || dateFin >= new Date().toISOString().slice(0, 10);
+      if (matchesRepondu && matchesDate) load();
+    };
+    socket.on('admin:contact_new', onNew);
+    return () => socket.off('admin:contact_new', onNew);
+  }, [load, repondu, dateFin]);
 
   async function loadMore() {
     setLoadingMore(true);
